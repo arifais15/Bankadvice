@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -106,16 +107,16 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
 
   const form = useForm<AdviceFormValues>({
     resolver: zodResolver(adviceFormSchema),
-    defaultValues: adviceToEdit || {
-      refNo: '27.12.3330.537.03.043.26',
-      subject: '',
-      debitAccount: 'CD-0200017857835',
-      bankName: 'Agrani Bank PLC',
-      bankBranch: 'Rajabari Bazar Branch',
-      purpose: '',
-      context: '',
-      narrative: '',
-      employees: [],
+    defaultValues: {
+      refNo: adviceToEdit?.refNo ?? '27.12.3330.537.03.043.26',
+      subject: adviceToEdit?.subject ?? '',
+      debitAccount: adviceToEdit?.debitAccount ?? 'CD-0200017857835',
+      bankName: adviceToEdit?.bankName ?? 'Agrani Bank PLC',
+      bankBranch: adviceToEdit?.bankBranch ?? 'Rajabari Bazar Branch',
+      purpose: adviceToEdit?.purpose ?? '',
+      context: adviceToEdit?.context ?? '',
+      narrative: adviceToEdit?.narrative ?? '',
+      employees: adviceToEdit?.employees ?? [],
     },
   });
 
