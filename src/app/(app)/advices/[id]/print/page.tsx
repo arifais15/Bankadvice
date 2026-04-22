@@ -14,8 +14,8 @@ import { cn } from '@/lib/utils';
 export default function PrintAdvicePage() {
   const params = useParams();
   const [advice, setAdvice] = React.useState<BankAdvice | null>(null);
-  const companyLogo = PlaceHolderImages.find(p => p.id === 'company-logo');
-  const companySeal = PlaceHolderImages.find(p => p.id === 'company-seal');
+  const companyLogoPlaceholder = PlaceHolderImages.find(p => p.id === 'company-logo');
+  const companySealPlaceholder = PlaceHolderImages.find(p => p.id === 'company-seal');
 
   const [watermarkSettings, setWatermarkSettings] = React.useState<{enabled: boolean, url: string | null}>({enabled: false, url: null});
   const [headerSettings, setHeaderSettings] = React.useState({
@@ -24,6 +24,8 @@ export default function PrintAdvicePage() {
     headerLine3: 'সদর দপ্তর, রাজেন্দ্রপুর, গাজীপুর',
     headerLine4: 'টেলিফোন: ০২-৯২০১৭৮৩, E-mail: gazipbs2@gmail.com',
   });
+  const [customLogoUrl, setCustomLogoUrl] = React.useState<string | null>(null);
+  const [customSealUrl, setCustomSealUrl] = React.useState<string | null>(null);
 
 
   useEffect(() => {
@@ -37,10 +39,16 @@ export default function PrintAdvicePage() {
     const storedSettings = localStorage.getItem('printSettings');
     if (storedSettings) {
       const settings = JSON.parse(storedSettings);
+      if (settings.companyLogoUrl) {
+        setCustomLogoUrl(settings.companyLogoUrl);
+      }
+      if (settings.companySealUrl) {
+        setCustomSealUrl(settings.companySealUrl);
+      }
       if (settings.watermarkEnabled) {
         setWatermarkSettings({
           enabled: true,
-          url: settings.watermarkUrl || companyLogo?.imageUrl || null
+          url: settings.watermarkUrl || settings.companyLogoUrl || companyLogoPlaceholder?.imageUrl || null
         });
       }
       setHeaderSettings({
@@ -51,7 +59,7 @@ export default function PrintAdvicePage() {
       });
     }
 
-  }, [params.id, companyLogo?.imageUrl]);
+  }, [params.id, companyLogoPlaceholder?.imageUrl]);
 
 
   useEffect(() => {
@@ -71,6 +79,9 @@ export default function PrintAdvicePage() {
       );
   }
   
+  const finalLogoUrl = customLogoUrl || companyLogoPlaceholder?.imageUrl;
+  const finalSealUrl = customSealUrl || companySealPlaceholder?.imageUrl;
+
   return (
     <div 
       className={cn(
@@ -82,14 +93,14 @@ export default function PrintAdvicePage() {
       <div className="relative z-10">
          <header className="grid grid-cols-3 items-center pb-4 font-sans">
           <div className="flex items-center">
-            {companyLogo && <Image src={companyLogo.imageUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogo.imageHint} />}
+            {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogoPlaceholder?.imageHint} className="object-contain" />}
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold">{headerSettings.headerLine1}</h1>
             <h2 className="text-xl">{headerSettings.headerLine2}</h2>
           </div>
           <div className="text-right">
-             {companySeal && <Image src={companySeal.imageUrl} alt="Company Seal" width={70} height={70} data-ai-hint={companySeal.imageHint} className="ml-auto opacity-70" />}
+             {finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={70} height={70} data-ai-hint={companySealPlaceholder?.imageHint} className="ml-auto opacity-70 object-contain" />}
             <p className="text-xs">{headerSettings.headerLine3}</p>
             <p className="text-xs">{headerSettings.headerLine4}</p>
           </div>

@@ -12,9 +12,11 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Settings as SettingsIcon, Trash2, Pencil } from 'lucide-react';
+import { Loader2, Settings as SettingsIcon, Trash2, Pencil, Image as ImageIcon } from 'lucide-react';
 
 const settingsSchema = z.object({
+  companyLogoUrl: z.string(),
+  companySealUrl: z.string(),
   watermarkEnabled: z.boolean(),
   watermarkUrl: z.string(),
   headerLine1: z.string().optional(),
@@ -33,6 +35,8 @@ export default function SettingsPage() {
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
+      companyLogoUrl: '',
+      companySealUrl: '',
       watermarkEnabled: false,
       watermarkUrl: '',
       headerLine1: 'গাজীপুর পল্লী বিদ্যুৎ সমিতি-২',
@@ -69,7 +73,20 @@ export default function SettingsPage() {
         title: 'Settings Saved',
         description: 'Your print settings have been updated.',
       });
+      // Force a re-render in case the logo was updated
+      window.dispatchEvent(new Event('storage'));
     }, 500);
+  };
+  
+  const createFileInputOnChange = (fieldName: keyof SettingsFormValues) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        form.setValue(fieldName, reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   if (isLoading) {
@@ -90,6 +107,88 @@ export default function SettingsPage() {
       />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ImageIcon className="h-5 w-5 text-primary" />
+                Company Identity
+              </CardTitle>
+              <CardDescription>
+                Upload your company logo and seal for use in printed documents and the app header.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-8">
+              <FormField
+                control={form.control}
+                name="companyLogoUrl"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Company Logo</FormLabel>
+                    <FormControl>
+                        <Input 
+                            type="file"
+                            accept="image/png, image/jpeg, image/gif, image/svg+xml"
+                            onChange={createFileInputOnChange('companyLogoUrl')}
+                        />
+                    </FormControl>
+                    <FormDescription>
+                        This logo appears in the app sidebar and on printed documents.
+                    </FormDescription>
+                    
+                    {field.value ? (
+                    <div className="mt-4 space-y-4">
+                        <p className="text-sm font-medium text-muted-foreground">Logo Preview:</p>
+                        <div className="relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
+                            <Image src={field.value} alt="Logo Preview" fill style={{ objectFit: 'contain' }} />
+                        </div>
+                        <Button variant="outline" size="sm" type="button" onClick={() => form.setValue('companyLogoUrl', '', { shouldValidate: true })}>
+                            <Trash2 className="mr-2 h-4 w-4" /> Remove Logo
+                        </Button>
+                    </div>
+                    ) : (
+                      <div className="mt-2 text-sm text-muted-foreground">No custom logo uploaded.</div>
+                    )}
+                    <FormMessage />
+                </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="companySealUrl"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Company Seal</FormLabel>
+                    <FormControl>
+                        <Input 
+                            type="file"
+                            accept="image/png, image/jpeg, image/gif, image/svg+xml"
+                            onChange={createFileInputOnChange('companySealUrl')}
+                        />
+                    </FormControl>
+                    <FormDescription>
+                        This seal appears on printed documents.
+                    </FormDescription>
+                    
+                    {field.value ? (
+                    <div className="mt-4 space-y-4">
+                        <p className="text-sm font-medium text-muted-foreground">Seal Preview:</p>
+                        <div className="relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
+                            <Image src={field.value} alt="Seal Preview" fill style={{ objectFit: 'contain' }} />
+                        </div>
+                        <Button variant="outline" size="sm" type="button" onClick={() => form.setValue('companySealUrl', '', { shouldValidate: true })}>
+                            <Trash2 className="mr-2 h-4 w-4" /> Remove Seal
+                        </Button>
+                    </div>
+                    ) : (
+                      <div className="mt-2 text-sm text-muted-foreground">No custom seal uploaded.</div>
+                    )}
+                    <FormMessage />
+                </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -199,20 +298,11 @@ export default function SettingsPage() {
                             <Input 
                                 type="file"
                                 accept="image/png, image/jpeg, image/gif, image/svg+xml"
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => {
-                                            form.setValue('watermarkUrl', reader.result as string, { shouldValidate: true });
-                                        };
-                                        reader.readAsDataURL(file);
-                                    }
-                                }} 
+                                onChange={createFileInputOnChange('watermarkUrl')}
                             />
                         </FormControl>
                         <FormDescription>
-                            Upload an image from your PC. This will be stored locally in your browser.
+                            Upload an image. If none is provided, the company logo will be used as the watermark.
                         </FormDescription>
                         
                         {field.value ? (
@@ -221,14 +311,8 @@ export default function SettingsPage() {
                             <div className="relative w-40 h-40 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
                                 <Image src={field.value} alt="Watermark Preview" fill style={{ objectFit: 'contain' }} />
                             </div>
-                            <Button variant="outline" size="sm" type="button" onClick={() => {
-                                form.setValue('watermarkUrl', '', { shouldValidate: true });
-                                // Reset the file input element for better UX
-                                const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-                                if (fileInput) fileInput.value = '';
-                            }}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Remove Watermark
+                            <Button variant="outline" size="sm" type="button" onClick={() => form.setValue('watermarkUrl', '', { shouldValidate: true })}>
+                                <Trash2 className="mr-2 h-4 w-4" /> Remove Watermark
                             </Button>
                         </div>
                         ) : (
