@@ -1,21 +1,22 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Settings as SettingsIcon } from 'lucide-react';
+import { Loader2, Settings as SettingsIcon, Trash2 } from 'lucide-react';
 
 const settingsSchema = z.object({
   watermarkEnabled: z.boolean(),
-  watermarkUrl: z.string().url().or(z.literal('')),
+  watermarkUrl: z.string(),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -49,7 +50,11 @@ export default function SettingsPage() {
 
   const onSubmit = (data: SettingsFormValues) => {
     setIsSaving(true);
-    localStorage.setItem('printSettings', JSON.stringify(data));
+    const dataToSave = {
+        ...data,
+        watermarkUrl: data.watermarkEnabled ? data.watermarkUrl : '',
+    };
+    localStorage.setItem('printSettings', JSON.stringify(dataToSave));
     setTimeout(() => {
       setIsSaving(false);
       toast({
@@ -66,6 +71,8 @@ export default function SettingsPage() {
       </div>
     );
   }
+
+  const watchWatermarkEnabled = form.watch('watermarkEnabled');
 
   return (
     <div className="flex flex-col gap-8">
@@ -108,21 +115,57 @@ export default function SettingsPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="watermarkUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Watermark Image URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://example.com/logo.png" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Provide a URL to the image you want to use as a watermark. Leave blank to use the default company logo.
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
+              {watchWatermarkEnabled && (
+                <FormField
+                    control={form.control}
+                    name="watermarkUrl"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Watermark Image</FormLabel>
+                        <FormControl>
+                            <Input 
+                                type="file"
+                                accept="image/png, image/jpeg, image/gif, image/svg+xml"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                            form.setValue('watermarkUrl', reader.result as string, { shouldValidate: true });
+                                        };
+                                        reader.readAsDataURL(file);
+                                    }
+                                }} 
+                            />
+                        </FormControl>
+                        <FormDescription>
+                            Upload an image from your PC. This will be stored locally in your browser.
+                        </FormDescription>
+                        
+                        {field.value ? (
+                        <div className="mt-4 space-y-4">
+                            <p className="text-sm font-medium text-muted-foreground">Current Watermark Preview:</p>
+                            <div className="relative w-40 h-40 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
+                                <Image src={field.value} alt="Watermark Preview" fill style={{ objectFit: 'contain' }} />
+                            </div>
+                            <Button variant="outline" size="sm" type="button" onClick={() => {
+                                form.setValue('watermarkUrl', '', { shouldValidate: true });
+                                // Reset the file input element for better UX
+                                const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+                                if (fileInput) fileInput.value = '';
+                            }}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Remove Watermark
+                            </Button>
+                        </div>
+                        ) : (
+                          <div className="mt-2 text-sm text-muted-foreground">No custom watermark uploaded. The default company logo will be used if available.</div>
+                        )}
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+              )}
             </CardContent>
           </Card>
           <div className="flex justify-end">
