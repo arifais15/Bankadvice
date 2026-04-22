@@ -50,7 +50,7 @@ export default function EditAdvicePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <AdviceComposer allEmployees={employees} adviceToEdit={advice} />
+      <AdviceComposer allEmployees={employees} adviceToEdit={advice} key={advice?.id} />
     </div>
   );
 }

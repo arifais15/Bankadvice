@@ -108,7 +108,7 @@ export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = 
 
   const form = useForm<AdviceFormValues>({
     resolver: zodResolver(adviceFormSchema),
-    defaultValues: {
+    defaultValues: adviceToEdit || {
       refNo: '27.12.3330.537.03.043.26',
       subject: '',
       debitAccount: 'CD-0200017857835',
@@ -120,13 +120,6 @@ export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = 
       employees: [],
     },
   });
-
-  React.useEffect(() => {
-    if (isEditMode && adviceToEdit) {
-      form.reset(adviceToEdit);
-    }
-  }, [isEditMode, adviceToEdit, form]);
-
 
   const { fields, append, remove, update } = useFieldArray({
     control: form.control,
