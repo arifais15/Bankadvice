@@ -15,7 +15,7 @@ import {
   FileText,
   ListChecks,
   Users,
-  Settings,
+  Landmark,
 } from 'lucide-react';
 import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
@@ -79,11 +79,23 @@ type AdviceComposerProps = {
   allEmployees: Employee[];
 };
 
-export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
+export function AdviceComposer({ allEmployees: initialEmployees }: AdviceComposerProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
+
+  const [allEmployees, setAllEmployees] = React.useState<Employee[]>([]);
+
+  React.useEffect(() => {
+    const storedEmployees = localStorage.getItem('employees');
+    if (storedEmployees) {
+      setAllEmployees(JSON.parse(storedEmployees));
+    } else {
+      setAllEmployees(initialEmployees);
+      localStorage.setItem('employees', JSON.stringify(initialEmployees));
+    }
+  }, [initialEmployees]);
 
   // State for the employee selection combobox
   const [open, setOpen] = React.useState(false);
@@ -93,11 +105,11 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
   const form = useForm<AdviceFormValues>({
     resolver: zodResolver(adviceFormSchema),
     defaultValues: {
-      refNo: '',
+      refNo: '27.12.3330.537.03.043.26',
       subject: '',
-      debitAccount: '',
-      bankName: '',
-      bankBranch: '',
+      debitAccount: 'CD-0200017857835',
+      bankName: 'Agrani Bank PLC',
+      bankBranch: 'Rajabari Bazar Branch',
       narrative: '',
       employees: [],
     },
@@ -162,14 +174,10 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
 
   const onSubmit = async (data: AdviceFormValues) => {
     setIsSubmitting(true);
-    // In a real app, this would be a server action call
-    console.log('Form Submitted', data);
-
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // This is where you would save to a database
       const newAdvice = {
         id: `adv-${Date.now()}`,
         adviceNumber: generateAdviceNumber(),
@@ -178,6 +186,13 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
         totalAmount: totalAmount,
         ...data
       };
+
+      // Save to localStorage to simulate persistence
+      const storedAdvices = localStorage.getItem('advices');
+      const existingAdvices = storedAdvices ? JSON.parse(storedAdvices) : [];
+      const updatedAdvices = [newAdvice, ...existingAdvices];
+      localStorage.setItem('advices', JSON.stringify(updatedAdvices));
+
       console.log("Creating new advice:", newAdvice);
       
       toast({
@@ -185,10 +200,9 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
         description: `Advice ${newAdvice.adviceNumber} has been created as a draft.`,
       });
       router.push('/advices');
-      // Force a refresh of the page to reflect new data from mock file
-      router.refresh(); 
 
     } catch (error) {
+      console.error(error);
       toast({
         variant: 'destructive',
         title: 'Submission Failed',
@@ -202,101 +216,103 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-         <div className="flex justify-end">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Settings className="mr-2 h-4 w-4" />
-                Configure Details
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[625px]">
-              <DialogHeader>
-                <DialogTitle>Advice Configuration</DialogTitle>
-                <DialogDescription>
-                  Set the core details for this advice document. These can be
-                  changed later.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-6 py-4">
-                <FormField
-                  control={form.control}
-                  name="refNo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Reference No.</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., 27.12.3330.537.03.043.26"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="debitAccount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Debit Account</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter the account number to debit"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
+        <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">New Bank Advice</h2>
+             <Dialog>
+                <DialogTrigger asChild>
+                <Button variant="outline">
+                    <Landmark className="mr-2 h-4 w-4" />
+                    Configure Bank Details
+                </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[625px]">
+                <DialogHeader>
+                    <DialogTitle>Advice Configuration</DialogTitle>
+                    <DialogDescription>
+                    Set the core details for this advice document. These can be
+                    changed later.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-6 py-4">
+                    <FormField
                     control={form.control}
-                    name="bankName"
+                    name="refNo"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Recipient Bank Name</FormLabel>
+                        <FormItem>
+                        <FormLabel>Reference No.</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Agrani Bank PLC" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="bankBranch"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Recipient Branch Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="e.g., Rajabari Bazar Branch"
+                            <Input
+                            placeholder="e.g., 27.12.3330.537.03.043.26"
                             {...field}
-                          />
+                            />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
+                        </FormItem>
                     )}
-                  />
+                    />
+                    <FormField
+                    control={form.control}
+                    name="debitAccount"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Debit Account</FormLabel>
+                        <FormControl>
+                            <Input
+                            placeholder="Enter the account number to debit"
+                            {...field}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="bankName"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Recipient Bank Name</FormLabel>
+                            <FormControl>
+                            <Input placeholder="e.g., Agrani Bank PLC" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="bankBranch"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Recipient Branch Name</FormLabel>
+                            <FormControl>
+                            <Input
+                                placeholder="e.g., Rajabari Bazar Branch"
+                                {...field}
+                            />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    </div>
                 </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button type="button">Done</Button>
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                    <DialogClose asChild>
+                    <Button type="button">Done</Button>
+                    </DialogClose>
+                </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
+
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           <div className="lg:col-span-2 space-y-8">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <FileText className="h-5 w-5 text-primary" />
                   <span>Advice Details</span>
                 </CardTitle>
@@ -320,7 +336,7 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
 
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <Sparkles className="h-5 w-5 text-primary" />
                   <span>Narrative Assistant</span>
                 </CardTitle>
@@ -383,7 +399,7 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
           <div className="space-y-8">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <Users className="h-5 w-5 text-primary" />
                   <span>Add Employee</span>
                 </CardTitle>
@@ -454,7 +470,7 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
 
         <Card>
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <ListChecks className="h-5 w-5 text-primary" />
                   <span>Employee Breakdown</span>
                 </CardTitle>

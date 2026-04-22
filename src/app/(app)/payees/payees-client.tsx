@@ -42,6 +42,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, PlusCircle, Upload, Edit, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const employeeSchema = z.object({
   id: z.string().min(1, 'Employee ID is required.'),
@@ -60,12 +71,24 @@ type PayeesClientProps = {
 };
 
 export function PayeesClient({ data }: PayeesClientProps) {
-  const [employees, setEmployees] = React.useState(data);
+  const [employees, setEmployees] = React.useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [editingEmployee, setEditingEmployee] = React.useState<Employee | null>(null);
 
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    const storedEmployees = localStorage.getItem('employees');
+    if (storedEmployees) {
+      setEmployees(JSON.parse(storedEmployees));
+    } else {
+      setEmployees(data);
+      localStorage.setItem('employees', JSON.stringify(data));
+    }
+    setIsLoading(false);
+  }, [data]);
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
@@ -85,8 +108,9 @@ export function PayeesClient({ data }: PayeesClientProps) {
     if (employee) {
       form.reset(employee);
     } else {
+      const nextId = (employees.reduce((maxId, emp) => Math.max(parseInt(emp.id, 10), maxId), 0) + 1).toString().padStart(4, '0');
       form.reset({
-        id: '',
+        id: nextId,
         name: '',
         designation: '',
         bankName: '',
@@ -99,29 +123,35 @@ export function PayeesClient({ data }: PayeesClientProps) {
   };
   
   const handleBulkUpload = () => {
-    // In a real app, this would trigger a file picker and upload process.
-    // For this demo, we'll just show a toast.
     toast({
         title: "Feature not implemented",
         description: "Bulk employee uploading is planned for a future release.",
     });
   };
 
+  const handleDeleteEmployee = (employeeId: string) => {
+    const updatedEmployees = employees.filter(p => p.id !== employeeId);
+    setEmployees(updatedEmployees);
+    localStorage.setItem('employees', JSON.stringify(updatedEmployees));
+    toast({ title: "Employee Deleted", description: "The employee has been removed from the registry." });
+  };
+
   const onSubmit = async (formData: EmployeeFormValues) => {
     setIsSubmitting(true);
-    // Simulate server action
     await new Promise(resolve => setTimeout(resolve, 500));
     
+    let updatedEmployees;
     if (editingEmployee) {
-      // Update existing employee
-      setEmployees(employees.map(p => p.id === editingEmployee.id ? { ...p, ...formData } : p));
+      updatedEmployees = employees.map(p => p.id === editingEmployee.id ? { ...p, ...formData } : p);
       toast({ title: "Employee Updated", description: `${formData.name}'s details have been saved.` });
     } else {
-      // Add new employee
       const newEmployee: Employee = { ...formData };
-      setEmployees([...employees, newEmployee]);
+      updatedEmployees = [newEmployee, ...employees];
       toast({ title: "Employee Added", description: `${formData.name} has been added to the registry.` });
     }
+    
+    setEmployees(updatedEmployees);
+    localStorage.setItem('employees', JSON.stringify(updatedEmployees));
 
     setIsSubmitting(false);
     setIsFormOpen(false);
@@ -140,6 +170,11 @@ export function PayeesClient({ data }: PayeesClientProps) {
 
       <Card>
         <CardContent>
+          {isLoading ? (
+             <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+             </div>
+          ) : (
           <Table>
             <TableHeader>
               <TableRow>
@@ -165,21 +200,40 @@ export function PayeesClient({ data }: PayeesClientProps) {
                     <TableCell className="font-mono">{employee.accountNumber}</TableCell>
                     <TableCell className="font-mono">{employee.routing}</TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleOpenForm(employee)}>
-                            <Edit className="mr-2 h-4 w-4" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive" onClick={() => alert("Delete not implemented")}>
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                       <AlertDialog>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleOpenForm(employee)}>
+                              <Edit className="mr-2 h-4 w-4" /> Edit
+                            </DropdownMenuItem>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete the
+                              employee record for "{employee.name}".
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>
+                              Continue
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </TableCell>
                   </TableRow>
                 ))
@@ -192,6 +246,7 @@ export function PayeesClient({ data }: PayeesClientProps) {
               )}
             </TableBody>
           </Table>
+          )}
         </CardContent>
       </Card>
       
@@ -204,12 +259,12 @@ export function PayeesClient({ data }: PayeesClientProps) {
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="id" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Employee ID</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
+                    <FormControl><Input {...field} disabled={!!editingEmployee} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />

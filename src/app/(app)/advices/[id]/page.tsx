@@ -1,7 +1,9 @@
+'use client';
+
+import React from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { Printer } from 'lucide-react';
-import { advices } from '@/lib/data';
+import { useParams, notFound } from 'next/navigation';
+import { Printer, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -23,21 +25,33 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
-import type { Metadata } from 'next';
+import type { BankAdvice } from '@/types';
+import { advices as fallbackAdvices } from '@/lib/data';
 
-type Props = {
-  params: { id: string };
-};
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const advice = advices.find((a) => a.id === params.id);
-  return {
-    title: `${advice ? advice.adviceNumber : 'Advice'} | BankAdviceFlow`,
-  };
-}
+export default function AdviceDetailsPage() {
+  const params = useParams();
+  const [advice, setAdvice] = React.useState<BankAdvice | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-export default function AdviceDetailsPage({ params }: { params: { id: string } }) {
-  const advice = advices.find((a) => a.id === params.id);
+  React.useEffect(() => {
+    const storedAdvices = localStorage.getItem('advices');
+    const advices = storedAdvices ? JSON.parse(storedAdvices) : fallbackAdvices;
+    const currentAdvice = advices.find((a: BankAdvice) => a.id === params.id);
+    
+    if (currentAdvice) {
+      setAdvice(currentAdvice);
+    }
+    setIsLoading(false);
+  }, [params.id]);
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   if (!advice) {
     notFound();

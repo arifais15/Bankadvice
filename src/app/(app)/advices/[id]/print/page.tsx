@@ -3,26 +3,43 @@
 import React, { useEffect } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { advices } from '@/lib/data';
+import { advices as fallbackAdvices } from '@/lib/data';
 import { formatCurrency, amountToWords } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import type { BankAdvice } from '@/types';
+import { Loader2 } from 'lucide-react';
 
 export default function PrintAdvicePage() {
   const params = useParams();
-  const advice = advices.find((a) => a.id === params.id);
+  const [advice, setAdvice] = React.useState<BankAdvice | null>(null);
   const companyLogo = PlaceHolderImages.find(p => p.id === 'company-logo');
   const companySeal = PlaceHolderImages.find(p => p.id === 'company-seal');
 
   useEffect(() => {
-    // Automatically trigger print dialog when component mounts
-    setTimeout(() => {
-      window.print();
-    }, 500);
-  }, []);
+    const storedAdvices = localStorage.getItem('advices');
+    const advices = storedAdvices ? JSON.parse(storedAdvices) : fallbackAdvices;
+    const currentAdvice = advices.find((a: BankAdvice) => a.id === params.id);
+    if(currentAdvice) {
+        setAdvice(currentAdvice);
+    }
+  }, [params.id]);
+
+
+  useEffect(() => {
+    if (advice) {
+        // Automatically trigger print dialog when component mounts
+        setTimeout(() => {
+          window.print();
+        }, 500);
+    }
+  }, [advice]);
 
   if (!advice) {
-    useEffect(() => notFound(), []);
-    return null;
+    return (
+        <div className="flex justify-center items-center h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
   }
   
   return (

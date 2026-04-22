@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Printer, Eye } from 'lucide-react';
+import { MoreHorizontal, Printer, Eye, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { BankAdvice } from '@/types';
 
@@ -28,11 +28,35 @@ type AdvicesClientProps = {
 };
 
 export function AdvicesClient({ data }: AdvicesClientProps) {
-  const [advices, setAdvices] = React.useState(data);
+  const [advices, setAdvices] = React.useState<BankAdvice[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const storedAdvices = localStorage.getItem('advices');
+    if (storedAdvices) {
+      setAdvices(JSON.parse(storedAdvices));
+    } else {
+      setAdvices(data);
+      localStorage.setItem('advices', JSON.stringify(data));
+    }
+    setIsLoading(false);
+  }, [data]);
 
   const sortedAdvices = React.useMemo(() => {
     return [...advices].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [advices]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

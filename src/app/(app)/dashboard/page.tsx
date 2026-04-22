@@ -1,20 +1,38 @@
+'use client';
+import React from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { advices, employees } from '@/lib/data';
+import { advices as fallbackAdvices, employees as fallbackEmployees } from '@/lib/data';
 import { formatCurrency } from '@/lib/utils';
-import { FileText, Users, Banknote } from 'lucide-react';
-import type { Metadata } from 'next';
+import { FileText, Users, Banknote, Loader2 } from 'lucide-react';
+import type { BankAdvice, Employee } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export const metadata: Metadata = {
-  title: 'Dashboard | BankAdviceFlow',
-};
 
 export default function DashboardPage() {
-  const totalAdvices = advices.length;
-  const totalEmployees = employees.length;
-  const totalAmountIssued = advices
-    .filter((a) => a.status === 'Issued')
-    .reduce((sum, a) => sum + a.totalAmount, 0);
+  const [stats, setStats] = React.useState({
+    totalAdvices: 0,
+    totalEmployees: 0,
+    totalAmountIssued: 0,
+  });
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const storedAdvices = localStorage.getItem('advices');
+    const advices: BankAdvice[] = storedAdvices ? JSON.parse(storedAdvices) : fallbackAdvices;
+
+    const storedEmployees = localStorage.getItem('employees');
+    const employees: Employee[] = storedEmployees ? JSON.parse(storedEmployees) : fallbackEmployees;
+
+    const totalAdvices = advices.length;
+    const totalEmployees = employees.length;
+    const totalAmountIssued = advices
+      .filter((a: BankAdvice) => a.status === 'Issued')
+      .reduce((sum: number, a: BankAdvice) => sum + a.totalAmount, 0);
+
+    setStats({ totalAdvices, totalEmployees, totalAmountIssued });
+    setIsLoading(false);
+  }, []);
 
   return (
     <div className="flex flex-col gap-8">
@@ -29,7 +47,7 @@ export default function DashboardPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalAdvices}</div>
+            {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.totalAdvices}</div>}
             <p className="text-xs text-muted-foreground">
               advices created in total
             </p>
@@ -43,7 +61,7 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalEmployees}</div>
+             {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.totalEmployees}</div>}
             <p className="text-xs text-muted-foreground">
               employees in your registry
             </p>
@@ -57,9 +75,7 @@ export default function DashboardPage() {
             <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(totalAmountIssued)}
-            </div>
+             {isLoading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">{formatCurrency(stats.totalAmountIssued)}</div>}
             <p className="text-xs text-muted-foreground">
               across all issued advices
             </p>
