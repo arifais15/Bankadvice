@@ -145,19 +145,20 @@ export function PayeesClient() {
     
     const employeeRef = doc(firestore, 'employees', formData.id);
 
-    setDoc(employeeRef, formData).then(() => {
-      toast({ title: editingEmployee ? "Employee Updated" : "Employee Added", description: `${formData.name}'s details have been saved.` });
-      setIsFormOpen(false);
-    }).catch((serverError) => {
-       const permissionError = new FirestorePermissionError({
-          path: employeeRef.path,
-          operation: editingEmployee ? 'update' : 'create',
-          requestResourceData: formData,
+    setDoc(employeeRef, formData)
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: employeeRef.path,
+            operation: editingEmployee ? 'update' : 'create',
+            requestResourceData: formData,
         });
         errorEmitter.emit('permission-error', permissionError);
-    }).finally(() => {
-      setIsSubmitting(false);
-    });
+        // Revert optimistic updates or show error toast if needed
+      });
+      
+    toast({ title: editingEmployee ? "Employee Updated" : "Employee Added", description: `${formData.name}'s details have been saved.` });
+    setIsFormOpen(false);
+    setIsSubmitting(false);
   };
 
   return (
