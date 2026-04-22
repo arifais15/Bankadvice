@@ -71,7 +71,6 @@ export function AdvicesClient({ data }: AdvicesClientProps) {
                           ? 'secondary'
                           : 'outline'
                       }
-                      className={advice.status === 'Issued' ? 'bg-green-600 text-white' : ''}
                     >
                       {advice.status}
                     </Badge>

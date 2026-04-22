@@ -76,7 +76,6 @@ export default function AdviceDetailsPage({ params }: { params: { id: string } }
                   ? 'secondary'
                   : 'outline'
               }
-              className={advice.status === 'Issued' ? 'bg-green-600 text-white' : ''}
             >
               {advice.status}
             </Badge>

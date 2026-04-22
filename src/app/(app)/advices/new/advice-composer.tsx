@@ -12,6 +12,9 @@ import {
   Trash2,
   Sparkles,
   Loader2,
+  FileText,
+  ListChecks,
+  UserPlus,
 } from 'lucide-react';
 import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
@@ -186,7 +189,10 @@ export function AdviceComposer({ allPayees }: AdviceComposerProps) {
           <div className="lg:col-span-2 space-y-8">
             <Card>
               <CardHeader>
-                <CardTitle>Advice Details</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <span>Advice Details</span>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -220,7 +226,10 @@ export function AdviceComposer({ allPayees }: AdviceComposerProps) {
 
             <Card>
               <CardHeader>
-                <CardTitle>Narrative Assistant</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-muted-foreground" />
+                  <span>Narrative Assistant</span>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -280,7 +289,10 @@ export function AdviceComposer({ allPayees }: AdviceComposerProps) {
           <div className="space-y-8">
             <Card>
               <CardHeader>
-                <CardTitle>Add Payee</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5 text-muted-foreground" />
+                  <span>Add Payee</span>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -348,7 +360,10 @@ export function AdviceComposer({ allPayees }: AdviceComposerProps) {
 
         <Card>
             <CardHeader>
-                <CardTitle>Payee Breakdown</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <ListChecks className="h-5 w-5 text-muted-foreground" />
+                  <span>Payee Breakdown</span>
+                </CardTitle>
             </CardHeader>
             <CardContent>
                 <Table>
