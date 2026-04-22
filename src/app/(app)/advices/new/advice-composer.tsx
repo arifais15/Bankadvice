@@ -15,7 +15,7 @@ import {
   FileText,
   ListChecks,
   Users,
-  Bank,
+  Landmark,
 } from 'lucide-react';
 import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
@@ -247,7 +247,7 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
              <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Bank className="h-5 w-5 text-primary" />
+                  <Landmark className="h-5 w-5 text-primary" />
                   <span>Recipient Bank</span>
                 </CardTitle>
               </CardHeader>
