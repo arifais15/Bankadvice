@@ -66,7 +66,7 @@ export default function AdviceDetailsPage() {
         ).toLocaleDateString()}`}
       >
         <Button asChild variant="outline">
-          <Link href={`/advices/${advice.id}/print`} target="_blank">
+          <Link href={`/advices/${advice.id}/print`}>
             <Printer className="mr-2 h-4 w-4" />
             Print
           </Link>
