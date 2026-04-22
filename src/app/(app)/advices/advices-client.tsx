@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Printer, Eye, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Printer, Eye, Edit, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { BankAdvice } from '@/types';
 
@@ -111,6 +111,11 @@ export function AdvicesClient({ data }: AdvicesClientProps) {
                         <DropdownMenuItem asChild>
                           <Link href={`/advices/${advice.id}`}>
                             <Eye className="mr-2 h-4 w-4" /> View Details
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/advices/${advice.id}/edit`}>
+                            <Edit className="mr-2 h-4 w-4" /> Edit
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>

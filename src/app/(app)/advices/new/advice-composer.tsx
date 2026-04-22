@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
-import type { Employee } from '@/types';
+import type { Employee, BankAdvice } from '@/types';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -77,13 +77,15 @@ type AdviceFormValues = z.infer<typeof adviceFormSchema>;
 
 type AdviceComposerProps = {
   allEmployees: Employee[];
+  adviceToEdit?: BankAdvice | null;
 };
 
-export function AdviceComposer({ allEmployees: initialEmployees }: AdviceComposerProps) {
+export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = null }: AdviceComposerProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const isEditMode = !!adviceToEdit;
 
   const [allEmployees, setAllEmployees] = React.useState<Employee[]>([]);
 
@@ -110,10 +112,19 @@ export function AdviceComposer({ allEmployees: initialEmployees }: AdviceCompose
       debitAccount: 'CD-0200017857835',
       bankName: 'Agrani Bank PLC',
       bankBranch: 'Rajabari Bazar Branch',
+      purpose: '',
+      context: '',
       narrative: '',
       employees: [],
     },
   });
+
+  React.useEffect(() => {
+    if (isEditMode && adviceToEdit) {
+      form.reset(adviceToEdit);
+    }
+  }, [isEditMode, adviceToEdit, form]);
+
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -178,28 +189,39 @@ export function AdviceComposer({ allEmployees: initialEmployees }: AdviceCompose
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const newAdvice = {
-        id: `adv-${Date.now()}`,
-        adviceNumber: generateAdviceNumber(),
-        date: new Date().toISOString(),
-        status: 'Draft' as const,
-        totalAmount: totalAmount,
-        ...data
-      };
-
-      // Save to localStorage to simulate persistence
       const storedAdvices = localStorage.getItem('advices');
       const existingAdvices = storedAdvices ? JSON.parse(storedAdvices) : [];
-      const updatedAdvices = [newAdvice, ...existingAdvices];
-      localStorage.setItem('advices', JSON.stringify(updatedAdvices));
-
-      console.log("Creating new advice:", newAdvice);
       
-      toast({
-        title: 'Advice Created',
-        description: `Advice ${newAdvice.adviceNumber} has been created as a draft.`,
-      });
+      if (isEditMode && adviceToEdit) {
+        const updatedAdvice = { ...adviceToEdit, ...data, totalAmount };
+        const updatedAdvices = existingAdvices.map((a: BankAdvice) => a.id === adviceToEdit.id ? updatedAdvice : a);
+        localStorage.setItem('advices', JSON.stringify(updatedAdvices));
+
+        toast({
+          title: 'Advice Updated',
+          description: `Advice ${updatedAdvice.adviceNumber} has been saved.`,
+        });
+      } else {
+        const newAdvice = {
+          id: `adv-${Date.now()}`,
+          adviceNumber: generateAdviceNumber(),
+          date: new Date().toISOString(),
+          status: 'Draft' as const,
+          totalAmount: totalAmount,
+          ...data
+        };
+
+        const updatedAdvices = [newAdvice, ...existingAdvices];
+        localStorage.setItem('advices', JSON.stringify(updatedAdvices));
+
+        toast({
+          title: 'Advice Created',
+          description: `Advice ${newAdvice.adviceNumber} has been created as a draft.`,
+        });
+      }
+
       router.push('/advices');
+      router.refresh();
 
     } catch (error) {
       console.error(error);
@@ -217,7 +239,7 @@ export function AdviceComposer({ allEmployees: initialEmployees }: AdviceCompose
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">New Bank Advice</h2>
+            <h2 className="text-xl font-semibold">{isEditMode ? 'Edit Bank Advice' : 'New Bank Advice'}</h2>
              <Dialog>
                 <DialogTrigger asChild>
                 <Button variant="outline">
@@ -522,7 +544,7 @@ export function AdviceComposer({ allEmployees: initialEmployees }: AdviceCompose
         <div className="flex justify-end">
           <Button type="submit" size="lg" disabled={isSubmitting}>
              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-             Create Advice
+             {isEditMode ? 'Save Changes' : 'Create Advice'}
           </Button>
         </div>
       </form>

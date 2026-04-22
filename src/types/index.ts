@@ -23,6 +23,8 @@ export type BankAdvice = {
   bankBranch: string;
   date: string; // ISO string
   narrative: string;
+  purpose?: string;
+  context?: string;
   employees: AdviceEmployeeItem[];
   status: 'Draft' | 'Issued' | 'Archived';
   totalAmount: number;
