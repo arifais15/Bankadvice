@@ -66,7 +66,7 @@ export function AdvicesClient({ data }: AdvicesClientProps) {
                     <Badge
                       variant={
                         advice.status === 'Issued'
-                          ? 'default'
+                          ? 'success'
                           : advice.status === 'Draft'
                           ? 'secondary'
                           : 'outline'
@@ -86,12 +86,12 @@ export function AdvicesClient({ data }: AdvicesClientProps) {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
                           <Link href={`/advices/${advice.id}`}>
-                            <Eye className="mr-2" /> View Details
+                            <Eye className="mr-2 h-4 w-4" /> View Details
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link href={`/advices/${advice.id}/print`} target="_blank">
-                            <Printer className="mr-2" /> Print
+                            <Printer className="mr-2 h-4 w-4" /> Print
                           </Link>
                         </DropdownMenuItem>
                       </DropdownMenuContent>

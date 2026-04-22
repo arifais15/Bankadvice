@@ -131,10 +131,10 @@ export function PayeesClient({ data }: PayeesClientProps) {
     <>
       <div className="flex justify-end gap-2">
          <Button variant="outline" onClick={handleBulkUpload}>
-            <Upload className="mr-2" /> Bulk Upload
+            <Upload className="mr-2 h-4 w-4" /> Bulk Upload
         </Button>
         <Button onClick={() => handleOpenForm(null)}>
-          <PlusCircle className="mr-2" /> Add Employee
+          <PlusCircle className="mr-2 h-4 w-4" /> Add Employee
         </Button>
       </div>
 
@@ -169,10 +169,10 @@ export function PayeesClient({ data }: PayeesClientProps) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleOpenForm(employee)}>
-                            <Edit className="mr-2" /> Edit
+                            <Edit className="mr-2 h-4 w-4" /> Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive" onClick={() => alert("Delete not implemented")}>
-                            <Trash2 className="mr-2" /> Delete
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -255,7 +255,7 @@ export function PayeesClient({ data }: PayeesClientProps) {
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 animate-spin" />}
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {editingEmployee ? 'Save Changes' : 'Add Employee'}
                 </Button>
               </DialogFooter>
