@@ -1,4 +1,7 @@
+'use client'; // Required for usePathname
+
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -15,6 +18,15 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isPrintView = pathname.includes('/print');
+
+  // If it's a print view, render children directly without the app shell.
+  // The root layout (src/app/layout.tsx) will still apply.
+  if (isPrintView) {
+    return <>{children}</>;
+  }
+
   return (
     <SidebarProvider>
       <Sidebar>
