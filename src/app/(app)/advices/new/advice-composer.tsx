@@ -15,7 +15,7 @@ import {
   FileText,
   ListChecks,
   Users,
-  Landmark,
+  Settings,
 } from 'lucide-react';
 import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
@@ -43,6 +43,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 
@@ -192,16 +202,23 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <div className="lg:col-span-2 space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" />
-                  <span>Advice Details</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <div className="flex justify-end">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Settings className="mr-2 h-4 w-4" />
+                Configure Details
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[625px]">
+              <DialogHeader>
+                <DialogTitle>Advice Configuration</DialogTitle>
+                <DialogDescription>
+                  Set the core details for this advice document. These can be
+                  changed later.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-6 py-4">
                 <FormField
                   control={form.control}
                   name="refNo"
@@ -209,7 +226,10 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
                     <FormItem>
                       <FormLabel>Reference No.</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., 27.12.3330.537.03.043.26" {...field} />
+                        <Input
+                          placeholder="e.g., 27.12.3330.537.03.043.26"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -222,42 +242,22 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
                     <FormItem>
                       <FormLabel>Debit Account</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter the account number to debit" {...field} />
+                        <Input
+                          placeholder="Enter the account number to debit"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                 <FormField
-                  control={form.control}
-                  name="subject"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel>Subject</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Monthly Payroll - May 2024" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Landmark className="h-5 w-5 text-primary" />
-                  <span>Recipient Bank</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="bankName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Bank Name</FormLabel>
+                        <FormLabel>Recipient Bank Name</FormLabel>
                         <FormControl>
                           <Input placeholder="e.g., Agrani Bank PLC" {...field} />
                         </FormControl>
@@ -270,14 +270,51 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
                     name="bankBranch"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Branch Name</FormLabel>
+                        <FormLabel>Recipient Branch Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Rajabari Bazar Branch" {...field} />
+                          <Input
+                            placeholder="e.g., Rajabari Bazar Branch"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                </div>
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button">Done</Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="lg:col-span-2 space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <span>Advice Details</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FormField
+                  control={form.control}
+                  name="subject"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Subject</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Monthly Payroll - May 2024" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 
