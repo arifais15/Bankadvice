@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   FileText,
   Users,
+  Settings,
 } from 'lucide-react';
 
 import {
@@ -18,6 +19,7 @@ const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/advices', icon: FileText, label: 'Advices' },
   { href: '/payees', icon: Users, label: 'Employees' },
+  { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function MainNav() {

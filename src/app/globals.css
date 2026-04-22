@@ -85,6 +85,27 @@
   }
 }
 
+@layer utilities {
+  .watermark {
+    position: relative;
+  }
+  .watermark::after {
+    content: '';
+    background-image: var(--watermark-url);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 50%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.05;
+    z-index: 0;
+    transform: rotate(-30deg);
+  }
+}
+
 @media print {
   .no-print {
     display: none !important;
