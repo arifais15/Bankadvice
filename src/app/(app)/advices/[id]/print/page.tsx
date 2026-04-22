@@ -15,7 +15,15 @@ export default function PrintAdvicePage() {
   const params = useParams();
   const [advice, setAdvice] = React.useState<BankAdvice | null>(null);
   const companyLogo = PlaceHolderImages.find(p => p.id === 'company-logo');
+  const companySeal = PlaceHolderImages.find(p => p.id === 'company-seal');
+
   const [watermarkSettings, setWatermarkSettings] = React.useState<{enabled: boolean, url: string | null}>({enabled: false, url: null});
+  const [headerSettings, setHeaderSettings] = React.useState({
+    headerLine1: 'গাজীপুর পল্লী বিদ্যুৎ সমিতি-২',
+    headerLine2: 'Gazipur Palli Bidyut Samity-2',
+    headerLine3: 'সদর দপ্তর, রাজেন্দ্রপুর, গাজীপুর',
+    headerLine4: 'টেলিফোন: ০২-৯২০১৭৮৩, E-mail: gazipbs2@gmail.com',
+  });
 
 
   useEffect(() => {
@@ -35,6 +43,12 @@ export default function PrintAdvicePage() {
           url: settings.watermarkUrl || companyLogo?.imageUrl || null
         });
       }
+      setHeaderSettings({
+        headerLine1: settings.headerLine1 || 'গাজীপুর পল্লী বিদ্যুৎ সমিতি-২',
+        headerLine2: settings.headerLine2 || 'Gazipur Palli Bidyut Samity-2',
+        headerLine3: settings.headerLine3 || 'সদর দপ্তর, রাজেন্দ্রপুর, গাজীপুর',
+        headerLine4: settings.headerLine4 || 'টেলিফোন: ০২-৯২০১৭৮৩, E-mail: gazipbs2@gmail.com',
+      });
     }
 
   }, [params.id, companyLogo?.imageUrl]);
@@ -60,21 +74,26 @@ export default function PrintAdvicePage() {
   return (
     <div 
       className={cn(
-        "p-8 max-w-5xl mx-auto font-serif bg-white text-black text-sm print:text-xs",
+        "p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs print:text-xs",
         watermarkSettings.enabled && "watermark"
       )}
       style={watermarkSettings.url ? { '--watermark-url': `url("${watermarkSettings.url}")` } as React.CSSProperties : {}}
     >
       <div className="relative z-10">
-        <header className="text-center pb-4 space-y-1 font-sans">
-          {companyLogo && <Image src={companyLogo.imageUrl} alt="Company Logo" width={60} height={60} data-ai-hint={companyLogo.imageHint} className="mx-auto" />}
-          <h1 className="text-2xl font-bold">গাজীপুর পল্লী বিদ্যুৎ সমিতি-২</h1>
-          <h2 className="text-xl">Gazipur Palli Bidyut Samity-2</h2>
-          <p className="text-xs">সদর দপ্তর, রাজেন্দ্রপুর, গাজীপুর</p>
-          <p className="text-xs">টেলিফোন: ০২-৯২০১৭৮৩, E-mail: gazipbs2@gmail.com</p>
+         <header className="grid grid-cols-3 items-center pb-4 font-sans">
+          <div className="flex items-center">
+            {companyLogo && <Image src={companyLogo.imageUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogo.imageHint} />}
+          </div>
+          <div className="text-center">
+            <h1 className="text-2xl font-bold">{headerSettings.headerLine1}</h1>
+            <h2 className="text-xl">{headerSettings.headerLine2}</h2>
+          </div>
+          <div className="text-right">
+             {companySeal && <Image src={companySeal.imageUrl} alt="Company Seal" width={70} height={70} data-ai-hint={companySeal.imageHint} className="ml-auto opacity-70" />}
+            <p className="text-xs">{headerSettings.headerLine3}</p>
+            <p className="text-xs">{headerSettings.headerLine4}</p>
+          </div>
         </header>
-
-        <div className="border-t-2 border-b-2 border-black my-2"></div>
 
         <div className="flex justify-between mt-4">
           <div>
@@ -82,15 +101,18 @@ export default function PrintAdvicePage() {
           </div>
           <div className="text-right">
             <p>Date: {new Date(advice.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-            <p className="font-bold">Advice No: {advice.adviceNumber}</p>
           </div>
         </div>
+        
+         <div className="flex justify-end mt-1">
+            <p className="font-bold">Advice No: {advice.adviceNumber}</p>
+        </div>
+
 
         <main className="mt-8">
           <div className="space-y-1">
               <p>Manager</p>
-              <p>{advice.bankName}</p>
-              <p>{advice.bankBranch}</p>
+              <p>{advice.bankName}, {advice.bankBranch}</p>
           </div>
           
           <p className="mt-4"><span className="font-bold">Subject: {advice.subject}</span></p>
@@ -104,7 +126,7 @@ export default function PrintAdvicePage() {
             <table className="w-full text-xs border-collapse border border-black">
               <thead className="text-left bg-gray-100">
                 <tr className="border-b border-black">
-                  <th className="p-1 border-r border-black font-semibold">SL</th>
+                  <th className="p-1 border-r border-black font-semibold text-center">SL</th>
                   <th className="p-1 border-r border-black font-semibold">ID</th>
                   <th className="p-1 border-r border-black font-semibold">Name</th>
                   <th className="p-1 border-r border-black font-semibold">Designation</th>
@@ -119,7 +141,7 @@ export default function PrintAdvicePage() {
                 {advice.employees.map((item, index) => (
                   <tr key={item.employee.id} className="border-b border-black">
                     <td className="p-1 border-r border-black text-center">{index + 1}</td>
-                    <td className="p-1 border-r border-black">{item.employee.id}</td>
+                    <td className="p-1 border-r border-black font-mono">{item.employee.id}</td>
                     <td className="p-1 border-r border-black">{item.employee.name}</td>
                     <td className="p-1 border-r border-black">{item.employee.designation}</td>
                     <td className="p-1 border-r border-black">{item.employee.bankName}</td>

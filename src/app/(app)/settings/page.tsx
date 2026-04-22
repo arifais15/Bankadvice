@@ -12,11 +12,15 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Settings as SettingsIcon, Trash2 } from 'lucide-react';
+import { Loader2, Settings as SettingsIcon, Trash2, Pencil } from 'lucide-react';
 
 const settingsSchema = z.object({
   watermarkEnabled: z.boolean(),
   watermarkUrl: z.string(),
+  headerLine1: z.string().optional(),
+  headerLine2: z.string().optional(),
+  headerLine3: z.string().optional(),
+  headerLine4: z.string().optional(),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -31,6 +35,10 @@ export default function SettingsPage() {
     defaultValues: {
       watermarkEnabled: false,
       watermarkUrl: '',
+      headerLine1: 'গাজীপুর পল্লী বিদ্যুৎ সমিতি-২',
+      headerLine2: 'Gazipur Palli Bidyut Samity-2',
+      headerLine3: 'সদর দপ্তর, রাজেন্দ্রপুর, গাজীপুর',
+      headerLine4: 'টেলিফোন: ০২-৯২০১৭৮৩, E-mail: gazipbs2@gmail.com',
     },
   });
 
@@ -82,6 +90,71 @@ export default function SettingsPage() {
       />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Pencil className="h-5 w-5 text-primary" />
+                Header Settings
+              </CardTitle>
+              <CardDescription>
+                Configure the text for the printed advice header.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+               <FormField
+                control={form.control}
+                name="headerLine1"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Header Line 1 (e.g., Company Name in Bengali)</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="headerLine2"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Header Line 2 (e.g., Company Name in English)</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="headerLine3"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Header Line 3 (e.g., Address)</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+                <FormField
+                control={form.control}
+                name="headerLine4"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Header Line 4 (e.g., Contact Info)</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
