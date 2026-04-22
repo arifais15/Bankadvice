@@ -3,6 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { useParams, notFound } from 'next/navigation';
+import { doc } from 'firebase/firestore';
+import { useFirestore, useDoc } from '@/firebase';
 import { Printer, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { PageHeader } from '@/components/page-header';
@@ -26,25 +28,18 @@ import {
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import type { BankAdvice } from '@/types';
-import { advices as fallbackAdvices } from '@/lib/data';
-
 
 export default function AdviceDetailsPage() {
   const params = useParams();
-  const [advice, setAdvice] = React.useState<BankAdvice | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const firestore = useFirestore();
 
-  React.useEffect(() => {
-    const storedAdvices = localStorage.getItem('advices');
-    const advices = storedAdvices ? JSON.parse(storedAdvices) : fallbackAdvices;
-    const currentAdvice = advices.find((a: BankAdvice) => a.id === params.id);
-    
-    if (currentAdvice) {
-      setAdvice(currentAdvice);
-    }
-    setIsLoading(false);
-  }, [params.id]);
-  
+  const adviceRef = React.useMemo(() => {
+      if (!firestore || !params.id) return null;
+      return doc(firestore, 'advices', params.id as string)
+  }, [firestore, params.id]);
+
+  const { data: advice, isLoading } = useDoc<BankAdvice>(adviceRef);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-96">

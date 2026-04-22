@@ -3,65 +3,33 @@
 import React, { useEffect } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { advices as fallbackAdvices } from '@/lib/data';
+import { doc } from 'firebase/firestore';
+import { useFirestore, useDoc } from '@/firebase';
 import { formatCurrency, amountToWords } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import type { BankAdvice } from '@/types';
+import type { BankAdvice, PrintSettings } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 
 export default function PrintAdvicePage() {
   const params = useParams();
-  const [advice, setAdvice] = React.useState<BankAdvice | null>(null);
+  const firestore = useFirestore();
   const companyLogoPlaceholder = PlaceHolderImages.find(p => p.id === 'company-logo');
   const companySealPlaceholder = PlaceHolderImages.find(p => p.id === 'company-seal');
 
-  const [watermarkSettings, setWatermarkSettings] = React.useState<{enabled: boolean, url: string | null}>({enabled: false, url: null});
-  const [headerSettings, setHeaderSettings] = React.useState({
-    headerLine1: 'গাজীপুর পল্লী বিদ্যুৎ সমিতি-২',
-    headerLine2: 'Gazipur Palli Bidyut Samity-2',
-    headerLine3: 'সদর দপ্তর, রাজেন্দ্রপুর, গাজীপুর',
-    headerLine4: 'টেলিফোন: ০২-৯২০১৭৮৩, E-mail: gazipbs2@gmail.com',
-  });
-  const [customLogoUrl, setCustomLogoUrl] = React.useState<string | null>(null);
-  const [customSealUrl, setCustomSealUrl] = React.useState<string | null>(null);
+  const adviceRef = React.useMemo(() => {
+      if (!firestore || !params.id) return null;
+      return doc(firestore, 'advices', params.id as string)
+  }, [firestore, params.id]);
+  const { data: advice, isLoading: isAdviceLoading } = useDoc<BankAdvice>(adviceRef);
 
-
-  useEffect(() => {
-    const storedAdvices = localStorage.getItem('advices');
-    const advices = storedAdvices ? JSON.parse(storedAdvices) : fallbackAdvices;
-    const currentAdvice = advices.find((a: BankAdvice) => a.id === params.id);
-    if(currentAdvice) {
-        setAdvice(currentAdvice);
-    }
-    
-    const storedSettings = localStorage.getItem('printSettings');
-    if (storedSettings) {
-      const settings = JSON.parse(storedSettings);
-      if (settings.companyLogoUrl) {
-        setCustomLogoUrl(settings.companyLogoUrl);
-      }
-      if (settings.companySealUrl) {
-        setCustomSealUrl(settings.companySealUrl);
-      }
-      if (settings.watermarkEnabled) {
-        setWatermarkSettings({
-          enabled: true,
-          url: settings.watermarkUrl || settings.companyLogoUrl || companyLogoPlaceholder?.imageUrl || null
-        });
-      }
-      setHeaderSettings({
-        headerLine1: settings.headerLine1 || 'গাজীপুর পল্লী বিদ্যুৎ সমিতি-২',
-        headerLine2: settings.headerLine2 || 'Gazipur Palli Bidyut Samity-2',
-        headerLine3: settings.headerLine3 || 'সদর দপ্তর, রাজেন্দ্রপুর, গাজীপুর',
-        headerLine4: settings.headerLine4 || 'টেলিফোন: ০২-৯২০১৭৮৩, E-mail: gazipbs2@gmail.com',
-      });
-    }
-
-  }, [params.id, companyLogoPlaceholder?.imageUrl]);
-
-
+  const settingsRef = React.useMemo(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'settings', 'print');
+  }, [firestore]);
+  const { data: settings, isLoading: areSettingsLoading } = useDoc<PrintSettings>(settingsRef);
+  
   useEffect(() => {
     if (advice) {
         // Automatically trigger print dialog when component mounts
@@ -71,24 +39,40 @@ export default function PrintAdvicePage() {
     }
   }, [advice]);
 
-  if (!advice) {
+  const isLoading = isAdviceLoading || areSettingsLoading;
+
+  if (isLoading || !advice) {
     return (
         <div className="flex justify-center items-center h-screen">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       );
   }
+
+  if (!advice) {
+    notFound();
+  }
   
-  const finalLogoUrl = customLogoUrl || companyLogoPlaceholder?.imageUrl;
-  const finalSealUrl = customSealUrl || companySealPlaceholder?.imageUrl;
+  const finalLogoUrl = settings?.companyLogoUrl || companyLogoPlaceholder?.imageUrl;
+  const finalSealUrl = settings?.companySealUrl || companySealPlaceholder?.imageUrl;
+  const watermarkEnabled = settings?.watermarkEnabled || false;
+  const watermarkUrl = settings?.watermarkUrl || settings?.companyLogoUrl || companyLogoPlaceholder?.imageUrl;
+  
+  const headerSettings = {
+    headerLine1: settings?.headerLine1 || 'গাজীপুর পল্লী বিদ্যুৎ সমিতি-২',
+    headerLine2: settings?.headerLine2 || 'Gazipur Palli Bidyut Samity-2',
+    headerLine3: settings?.headerLine3 || 'সদর দপ্তর, রাজেন্দ্রপুর, গাজীপুর',
+    headerLine4: settings?.headerLine4 || 'টেলিফোন: ০২-৯২০১৭৮৩, E-mail: gazipbs2@gmail.com',
+  };
+
 
   return (
     <div 
       className={cn(
         "p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs print:text-xs",
-        watermarkSettings.enabled && "watermark"
+        watermarkEnabled && "watermark"
       )}
-      style={watermarkSettings.url ? { '--watermark-url': `url("${watermarkSettings.url}")` } as React.CSSProperties : {}}
+      style={watermarkUrl ? { '--watermark-url': `url("${watermarkUrl}")` } as React.CSSProperties : {}}
     >
       <div className="relative z-10">
          <header className="grid grid-cols-3 items-center pb-4 font-sans">

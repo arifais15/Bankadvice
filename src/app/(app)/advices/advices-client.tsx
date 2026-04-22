@@ -2,6 +2,8 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { collection } from 'firebase/firestore';
+import { useFirestore, useCollection } from '@/firebase';
 import {
   Table,
   TableBody,
@@ -23,26 +25,17 @@ import { MoreHorizontal, Printer, Eye, Edit, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { BankAdvice } from '@/types';
 
-type AdvicesClientProps = {
-  data: BankAdvice[];
-};
-
-export function AdvicesClient({ data }: AdvicesClientProps) {
-  const [advices, setAdvices] = React.useState<BankAdvice[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    const storedAdvices = localStorage.getItem('advices');
-    if (storedAdvices) {
-      setAdvices(JSON.parse(storedAdvices));
-    } else {
-      setAdvices(data);
-      localStorage.setItem('advices', JSON.stringify(data));
-    }
-    setIsLoading(false);
-  }, [data]);
+export function AdvicesClient() {
+  const firestore = useFirestore();
+  const advicesCollection = React.useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'advices');
+  }, [firestore]);
+  
+  const { data: advices, isLoading } = useCollection<BankAdvice>(advicesCollection);
 
   const sortedAdvices = React.useMemo(() => {
+    if (!advices) return [];
     return [...advices].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [advices]);
 

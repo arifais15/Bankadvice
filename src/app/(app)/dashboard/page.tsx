@@ -1,38 +1,35 @@
 'use client';
 import React from 'react';
+import { collection } from 'firebase/firestore';
+import { useFirestore, useCollection } from '@/firebase';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { advices as fallbackAdvices, employees as fallbackEmployees } from '@/lib/data';
 import { formatCurrency } from '@/lib/utils';
-import { FileText, Users, Banknote, Loader2 } from 'lucide-react';
+import { FileText, Users, Banknote } from 'lucide-react';
 import type { BankAdvice, Employee } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 
 export default function DashboardPage() {
-  const [stats, setStats] = React.useState({
-    totalAdvices: 0,
-    totalEmployees: 0,
-    totalAmountIssued: 0,
-  });
-  const [isLoading, setIsLoading] = React.useState(true);
+  const firestore = useFirestore();
+  
+  const advicesCollection = React.useMemo(() => firestore ? collection(firestore, 'advices') : null, [firestore]);
+  const { data: advices, isLoading: advicesLoading } = useCollection<BankAdvice>(advicesCollection);
 
-  React.useEffect(() => {
-    const storedAdvices = localStorage.getItem('advices');
-    const advices: BankAdvice[] = storedAdvices ? JSON.parse(storedAdvices) : fallbackAdvices;
+  const employeesCollection = React.useMemo(() => firestore ? collection(firestore, 'employees') : null, [firestore]);
+  const { data: employees, isLoading: employeesLoading } = useCollection<Employee>(employeesCollection);
 
-    const storedEmployees = localStorage.getItem('employees');
-    const employees: Employee[] = storedEmployees ? JSON.parse(storedEmployees) : fallbackEmployees;
-
-    const totalAdvices = advices.length;
-    const totalEmployees = employees.length;
-    const totalAmountIssued = advices
-      .filter((a: BankAdvice) => a.status === 'Issued')
-      .reduce((sum: number, a: BankAdvice) => sum + a.totalAmount, 0);
-
-    setStats({ totalAdvices, totalEmployees, totalAmountIssued });
-    setIsLoading(false);
-  }, []);
+  const stats = React.useMemo(() => {
+    const totalAdvices = advices?.length || 0;
+    const totalEmployees = employees?.length || 0;
+    const totalAmountIssued = (advices || [])
+      .filter((a) => a.status === 'Issued')
+      .reduce((sum, a) => sum + a.totalAmount, 0);
+    
+    return { totalAdvices, totalEmployees, totalAmountIssued };
+  }, [advices, employees]);
+  
+  const isLoading = advicesLoading || employeesLoading;
 
   return (
     <div className="flex flex-col gap-8">

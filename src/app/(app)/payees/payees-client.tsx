@@ -4,6 +4,10 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { collection, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { useFirestore, useCollection } from '@/firebase';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 import type { Employee } from '@/types';
 
 import {
@@ -66,29 +70,20 @@ const employeeSchema = z.object({
 
 type EmployeeFormValues = z.infer<typeof employeeSchema>;
 
-type PayeesClientProps = {
-  data: Employee[];
-};
-
-export function PayeesClient({ data }: PayeesClientProps) {
-  const [employees, setEmployees] = React.useState<Employee[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+export function PayeesClient() {
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [editingEmployee, setEditingEmployee] = React.useState<Employee | null>(null);
 
   const { toast } = useToast();
+  const firestore = useFirestore();
 
-  React.useEffect(() => {
-    const storedEmployees = localStorage.getItem('employees');
-    if (storedEmployees) {
-      setEmployees(JSON.parse(storedEmployees));
-    } else {
-      setEmployees(data);
-      localStorage.setItem('employees', JSON.stringify(data));
-    }
-    setIsLoading(false);
-  }, [data]);
+  const employeesCollection = React.useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'employees');
+  }, [firestore]);
+
+  const { data: employees, isLoading } = useCollection<Employee>(employeesCollection);
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
@@ -108,9 +103,10 @@ export function PayeesClient({ data }: PayeesClientProps) {
     if (employee) {
       form.reset(employee);
     } else {
-      const nextId = (employees.reduce((maxId, emp) => Math.max(parseInt(emp.id, 10), maxId), 0) + 1).toString().padStart(4, '0');
+      const allIds = employees ? employees.map(e => parseInt(e.id, 10)).filter(id => !isNaN(id)) : [];
+      const nextId = (allIds.length > 0 ? Math.max(...allIds) : 0) + 1;
       form.reset({
-        id: nextId,
+        id: nextId.toString().padStart(4, '0'),
         name: '',
         designation: '',
         bankName: '',
@@ -130,31 +126,38 @@ export function PayeesClient({ data }: PayeesClientProps) {
   };
 
   const handleDeleteEmployee = (employeeId: string) => {
-    const updatedEmployees = employees.filter(p => p.id !== employeeId);
-    setEmployees(updatedEmployees);
-    localStorage.setItem('employees', JSON.stringify(updatedEmployees));
-    toast({ title: "Employee Deleted", description: "The employee has been removed from the registry." });
+    if (!firestore) return;
+    const employeeRef = doc(firestore, 'employees', employeeId);
+    deleteDoc(employeeRef).then(() => {
+      toast({ title: "Employee Deleted", description: "The employee has been removed from the registry." });
+    }).catch((serverError) => {
+      const permissionError = new FirestorePermissionError({
+          path: employeeRef.path,
+          operation: 'delete',
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
   };
 
-  const onSubmit = async (formData: EmployeeFormValues) => {
+  const onSubmit = (formData: EmployeeFormValues) => {
+    if (!firestore) return;
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
     
-    let updatedEmployees;
-    if (editingEmployee) {
-      updatedEmployees = employees.map(p => p.id === editingEmployee.id ? { ...p, ...formData } : p);
-      toast({ title: "Employee Updated", description: `${formData.name}'s details have been saved.` });
-    } else {
-      const newEmployee: Employee = { ...formData };
-      updatedEmployees = [newEmployee, ...employees];
-      toast({ title: "Employee Added", description: `${formData.name} has been added to the registry.` });
-    }
-    
-    setEmployees(updatedEmployees);
-    localStorage.setItem('employees', JSON.stringify(updatedEmployees));
+    const employeeRef = doc(firestore, 'employees', formData.id);
 
-    setIsSubmitting(false);
-    setIsFormOpen(false);
+    setDoc(employeeRef, formData).then(() => {
+      toast({ title: editingEmployee ? "Employee Updated" : "Employee Added", description: `${formData.name}'s details have been saved.` });
+      setIsFormOpen(false);
+    }).catch((serverError) => {
+       const permissionError = new FirestorePermissionError({
+          path: employeeRef.path,
+          operation: editingEmployee ? 'update' : 'create',
+          requestResourceData: formData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    }).finally(() => {
+      setIsSubmitting(false);
+    });
   };
 
   return (
@@ -189,7 +192,7 @@ export function PayeesClient({ data }: PayeesClientProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {employees.length > 0 ? (
+              {employees && employees.length > 0 ? (
                 employees.map((employee) => (
                   <TableRow key={employee.id}>
                     <TableCell className="font-medium font-mono">{employee.id}</TableCell>

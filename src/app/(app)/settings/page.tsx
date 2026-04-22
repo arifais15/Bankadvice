@@ -5,6 +5,10 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { doc, setDoc } from 'firebase/firestore';
+import { useFirestore, useDoc } from '@/firebase';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -13,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Settings as SettingsIcon, Trash2, Pencil, Image as ImageIcon } from 'lucide-react';
+import type { PrintSettings } from '@/types';
 
 const settingsSchema = z.object({
   companyLogoUrl: z.string(),
@@ -29,9 +34,15 @@ type SettingsFormValues = z.infer<typeof settingsSchema>;
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
+  const firestore = useFirestore();
 
+  const settingsRef = React.useMemo(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'settings', 'print');
+  }, [firestore]);
+  const { data: settings, isLoading } = useDoc<PrintSettings>(settingsRef);
+  
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
@@ -45,41 +56,43 @@ export default function SettingsPage() {
       headerLine4: 'টেলিফোন: ০২-৯২০১৭৮৩, E-mail: gazipbs2@gmail.com',
     },
   });
-
+  
   React.useEffect(() => {
-    try {
-        const storedSettings = localStorage.getItem('printSettings');
-        if (storedSettings) {
-          const settings = JSON.parse(storedSettings);
-          form.reset(settings);
-        }
-    } catch (e) {
-        console.error("Failed to parse settings from localStorage", e);
-    } finally {
-        setIsLoading(false);
+    if (settings) {
+      form.reset(settings);
     }
-  }, [form]);
+  }, [settings, form]);
 
   const onSubmit = (data: SettingsFormValues) => {
+    if (!firestore) return;
     setIsSaving(true);
-    // Use a timeout to give feedback to the user that something is happening
-    setTimeout(() => {
-      try {
-        const dataToSave = {
-            ...data,
-            watermarkUrl: data.watermarkEnabled ? data.watermarkUrl : '',
-        };
-        localStorage.setItem('printSettings', JSON.stringify(dataToSave));
+    
+    const dataToSave = {
+        ...data,
+        watermarkUrl: data.watermarkEnabled ? data.watermarkUrl : '',
+    };
+    
+    const settingsDocRef = doc(firestore, 'settings', 'print');
+    
+    setDoc(settingsDocRef, dataToSave, { merge: true })
+      .then(() => {
         toast({
           title: 'Settings Saved',
           description: 'Your print settings have been updated.',
         });
-        // Force a re-render in other components listening to storage
-        window.dispatchEvent(new Event('storage'));
-      } catch (error) {
+      })
+      .catch((error) => {
         let message = 'Could not save settings.';
         if (error instanceof DOMException && error.name === 'QuotaExceededError') {
             message = 'An uploaded image is too large. Please use smaller files (e.g., under 1MB).';
+        } else {
+            const permissionError = new FirestorePermissionError({
+                path: settingsDocRef.path,
+                operation: 'update',
+                requestResourceData: dataToSave,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            message = 'Permission denied. Could not save settings.';
         }
         toast({
           variant: 'destructive',
@@ -87,10 +100,10 @@ export default function SettingsPage() {
           description: message,
         });
         console.error("Failed to save settings:", error);
-      } finally {
+      })
+      .finally(() => {
         setIsSaving(false);
-      }
-    }, 500);
+      });
   };
   
   const createFileInputOnChange = (fieldName: keyof SettingsFormValues) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,7 +111,7 @@ export default function SettingsPage() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        form.setValue(fieldName, reader.result as string, { shouldValidate: true });
+        form.setValue(fieldName, reader.result as string, { shouldValidate: true, shouldDirty: true });
       };
       reader.readAsDataURL(file);
     }
@@ -156,7 +169,7 @@ export default function SettingsPage() {
                         <div className="relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
                             <Image src={field.value} alt="Logo Preview" fill style={{ objectFit: 'contain' }} />
                         </div>
-                        <Button variant="outline" size="sm" type="button" onClick={() => form.setValue('companyLogoUrl', '', { shouldValidate: true })}>
+                        <Button variant="outline" size="sm" type="button" onClick={() => form.setValue('companyLogoUrl', '', { shouldValidate: true, shouldDirty: true })}>
                             <Trash2 className="mr-2 h-4 w-4" /> Remove Logo
                         </Button>
                     </div>
@@ -190,7 +203,7 @@ export default function SettingsPage() {
                         <div className="relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
                             <Image src={field.value} alt="Seal Preview" fill style={{ objectFit: 'contain' }} />
                         </div>
-                        <Button variant="outline" size="sm" type="button" onClick={() => form.setValue('companySealUrl', '', { shouldValidate: true })}>
+                        <Button variant="outline" size="sm" type="button" onClick={() => form.setValue('companySealUrl', '', { shouldValidate: true, shouldDirty: true })}>
                             <Trash2 className="mr-2 h-4 w-4" /> Remove Seal
                         </Button>
                     </div>
@@ -326,7 +339,7 @@ export default function SettingsPage() {
                             <div className="relative w-40 h-40 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
                                 <Image src={field.value} alt="Watermark Preview" fill style={{ objectFit: 'contain' }} />
                             </div>
-                            <Button variant="outline" size="sm" type="button" onClick={() => form.setValue('watermarkUrl', '', { shouldValidate: true })}>
+                            <Button variant="outline" size="sm" type="button" onClick={() => form.setValue('watermarkUrl', '', { shouldValidate: true, shouldDirty: true })}>
                                 <Trash2 className="mr-2 h-4 w-4" /> Remove Watermark
                             </Button>
                         </div>
@@ -341,7 +354,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
           <div className="flex justify-end">
-            <Button type="submit" disabled={isSaving}>
+            <Button type="submit" disabled={isSaving || !form.formState.isDirty}>
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Settings
             </Button>

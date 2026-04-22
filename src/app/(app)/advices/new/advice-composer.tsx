@@ -5,6 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { doc, collection, setDoc, addDoc } from 'firebase/firestore';
+import { useFirestore, useCollection } from '@/firebase';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 import {
   ChevronsUpDown,
   Check,
@@ -77,28 +81,22 @@ const adviceFormSchema = z.object({
 type AdviceFormValues = z.infer<typeof adviceFormSchema>;
 
 type AdviceComposerProps = {
-  allEmployees: Employee[];
   adviceToEdit?: BankAdvice | null;
 };
 
-export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = null }: AdviceComposerProps) {
+export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const isEditMode = !!adviceToEdit;
 
-  const [allEmployees, setAllEmployees] = React.useState<Employee[]>([]);
-
-  React.useEffect(() => {
-    const storedEmployees = localStorage.getItem('employees');
-    if (storedEmployees) {
-      setAllEmployees(JSON.parse(storedEmployees));
-    } else {
-      setAllEmployees(initialEmployees);
-      localStorage.setItem('employees', JSON.stringify(initialEmployees));
-    }
-  }, [initialEmployees]);
+  const employeesCollection = React.useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'employees');
+  }, [firestore]);
+  const { data: allEmployees, isLoading: areEmployeesLoading } = useCollection<Employee>(employeesCollection);
 
   // State for the employee selection combobox
   const [open, setOpen] = React.useState(false);
@@ -191,55 +189,58 @@ export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = 
   };
 
 
-  const onSubmit = async (data: AdviceFormValues) => {
+  const onSubmit = (data: AdviceFormValues) => {
+    if (!firestore) return;
     setIsSubmitting(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const storedAdvices = localStorage.getItem('advices');
-      const existingAdvices = storedAdvices ? JSON.parse(storedAdvices) : [];
-      
-      if (isEditMode && adviceToEdit) {
-        const updatedAdvice = { ...adviceToEdit, ...data, totalAmount };
-        const updatedAdvices = existingAdvices.map((a: BankAdvice) => a.id === adviceToEdit.id ? updatedAdvice : a);
-        localStorage.setItem('advices', JSON.stringify(updatedAdvices));
-
+    
+    if (isEditMode && adviceToEdit) {
+      const adviceRef = doc(firestore, 'advices', adviceToEdit.id);
+      const updatedData = { ...adviceToEdit, ...data, totalAmount };
+      setDoc(adviceRef, updatedData, { merge: true }).then(() => {
         toast({
           title: 'Advice Updated',
-          description: `Advice ${updatedAdvice.adviceNumber} has been saved.`,
+          description: `Advice ${updatedData.adviceNumber} has been saved.`,
         });
-      } else {
-        const newAdvice = {
-          id: `adv-${Date.now()}`,
-          adviceNumber: generateAdviceNumber(),
-          date: new Date().toISOString(),
-          status: 'Draft' as const,
-          totalAmount: totalAmount,
-          ...data
-        };
-
-        const updatedAdvices = [newAdvice, ...existingAdvices];
-        localStorage.setItem('advices', JSON.stringify(updatedAdvices));
-
+        router.push('/advices');
+        router.refresh();
+      }).catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: adviceRef.path,
+          operation: 'update',
+          requestResourceData: updatedData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      }).finally(() => {
+        setIsSubmitting(false);
+      });
+    } else {
+      const adviceCollection = collection(firestore, 'advices');
+      const newAdviceRef = doc(adviceCollection);
+      const newAdvice = {
+        ...data,
+        id: newAdviceRef.id,
+        adviceNumber: generateAdviceNumber(),
+        date: new Date().toISOString(),
+        status: 'Draft' as const,
+        totalAmount: totalAmount,
+      };
+      setDoc(newAdviceRef, newAdvice).then(() => {
         toast({
           title: 'Advice Created',
           description: `Advice ${newAdvice.adviceNumber} has been created as a draft.`,
         });
-      }
-
-      router.push('/advices');
-      router.refresh();
-
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Submission Failed',
-        description: 'There was an error creating the advice.',
+        router.push('/advices');
+        router.refresh();
+      }).catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: newAdviceRef.path,
+          operation: 'create',
+          requestResourceData: newAdvice,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      }).finally(() => {
+        setIsSubmitting(false);
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -444,9 +445,10 @@ export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = 
                           role="combobox"
                           aria-expanded={open}
                           className="w-full justify-between font-normal"
+                          disabled={areEmployeesLoading}
                         >
                           {selectedEmployee
-                            ? allEmployees.find((p) => p.id === selectedEmployee.id)?.name
+                            ? allEmployees?.find((p) => p.id === selectedEmployee.id)?.name
                             : 'Select employee...'}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -456,7 +458,7 @@ export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = 
                           <CommandInput placeholder="Search employee by name..." />
                           <CommandEmpty>No employee found.</CommandEmpty>
                           <CommandGroup>
-                            {allEmployees.map((p) => (
+                            {allEmployees?.map((p) => (
                               <CommandItem
                                 key={p.id}
                                 value={p.name}

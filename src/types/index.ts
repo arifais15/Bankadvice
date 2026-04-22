@@ -29,3 +29,15 @@ export type BankAdvice = {
   status: 'Draft' | 'Issued' | 'Archived';
   totalAmount: number;
 };
+
+export type PrintSettings = {
+  id: 'print';
+  companyLogoUrl?: string;
+  companySealUrl?: string;
+  watermarkEnabled?: boolean;
+  watermarkUrl?: string;
+  headerLine1?: string;
+  headerLine2?: string;
+  headerLine3?: string;
+  headerLine4?: string;
+};

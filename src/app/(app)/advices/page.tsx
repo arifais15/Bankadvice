@@ -3,7 +3,6 @@ import { PlusCircle } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { AdvicesClient } from './advices-client';
-import { advices } from '@/lib/data';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -11,9 +10,6 @@ export const metadata: Metadata = {
 };
 
 export default function AdvicesPage() {
-  // In a real app, you'd fetch this data
-  const adviceData = advices;
-
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
@@ -27,7 +23,7 @@ export default function AdvicesPage() {
           </Link>
         </Button>
       </PageHeader>
-      <AdvicesClient data={adviceData} />
+      <AdvicesClient />
     </div>
   );
 }

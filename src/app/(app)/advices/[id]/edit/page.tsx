@@ -2,39 +2,29 @@
 
 import React from 'react';
 import { useParams, notFound } from 'next/navigation';
+import { doc, collection } from 'firebase/firestore';
+import { useFirestore, useDoc, useCollection } from '@/firebase';
 import { AdviceComposer } from '@/app/(app)/advices/new/advice-composer';
-import { employees as fallbackEmployees, advices as fallbackAdvices } from '@/lib/data';
 import type { BankAdvice, Employee } from '@/types';
 import { Loader2 } from 'lucide-react';
 
 export default function EditAdvicePage() {
   const params = useParams();
-  const [advice, setAdvice] = React.useState<BankAdvice | null>(null);
-  const [employees, setEmployees] = React.useState<Employee[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const firestore = useFirestore();
 
-  React.useEffect(() => {
-    try {
-        const storedAdvices = localStorage.getItem('advices');
-        const allAdvices: BankAdvice[] = storedAdvices ? JSON.parse(storedAdvices) : fallbackAdvices;
-        const currentAdvice = allAdvices.find((a) => a.id === params.id);
-    
-        const storedEmployees = localStorage.getItem('employees');
-        const allEmployees: Employee[] = storedEmployees ? JSON.parse(storedEmployees) : fallbackEmployees;
-        
-        if (currentAdvice) {
-          setAdvice(currentAdvice);
-        }
-        setEmployees(allEmployees);
-    } catch (e) {
-        // Handle potential JSON parsing errors
-        console.error("Failed to parse data from localStorage", e);
-        setAdvice(null);
-        setEmployees(fallbackEmployees);
-    } finally {
-        setIsLoading(false);
-    }
-  }, [params.id]);
+  const adviceRef = React.useMemo(() => {
+    if (!firestore || !params.id) return null;
+    return doc(firestore, 'advices', params.id as string)
+  }, [firestore, params.id]);
+  const { data: advice, isLoading: isAdviceLoading } = useDoc<BankAdvice>(adviceRef);
+  
+  const employeesCollection = React.useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'employees');
+  }, [firestore]);
+  const { data: employees, isLoading: areEmployeesLoading } = useCollection<Employee>(employeesCollection);
+
+  const isLoading = isAdviceLoading || areEmployeesLoading;
 
   if (isLoading) {
     return (
@@ -50,7 +40,7 @@ export default function EditAdvicePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <AdviceComposer allEmployees={employees} adviceToEdit={advice} key={advice?.id} />
+      <AdviceComposer allEmployees={employees || []} adviceToEdit={advice} key={advice?.id} />
     </div>
   );
 }
