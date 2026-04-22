@@ -16,6 +16,7 @@ import {
   ListChecks,
   Users,
   Landmark,
+  Edit,
 } from 'lucide-react';
 import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
@@ -103,6 +104,7 @@ export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = 
   const [open, setOpen] = React.useState(false);
   const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | null>(null);
   const [netPayment, setNetPayment] = React.useState('');
+  const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
 
   const form = useForm<AdviceFormValues>({
     resolver: zodResolver(adviceFormSchema),
@@ -126,7 +128,7 @@ export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = 
   }, [isEditMode, adviceToEdit, form]);
 
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: 'employees',
   });
@@ -137,18 +139,31 @@ export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = 
     0
   );
 
-  const handleAddEmployee = () => {
+  const handleAddOrUpdateEmployee = () => {
     if (selectedEmployee && netPayment) {
       const paymentAmount = parseFloat(netPayment);
       if (paymentAmount > 0) {
-        append({
+        const newItem = {
           employee: selectedEmployee,
           netPayment: paymentAmount,
-        });
+        };
+        if (editingIndex !== null) {
+          update(editingIndex, newItem);
+          setEditingIndex(null);
+        } else {
+          append(newItem);
+        }
         setSelectedEmployee(null);
         setNetPayment('');
       }
     }
+  };
+
+  const handleStartEditing = (index: number) => {
+    const item = form.getValues(`employees.${index}`);
+    setEditingIndex(index);
+    setSelectedEmployee(item.employee);
+    setNetPayment(item.netPayment.toString());
   };
   
   const handleGenerateNarrative = async () => {
@@ -423,7 +438,7 @@ export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = 
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Users className="h-5 w-5 text-primary" />
-                  <span>Add Employee</span>
+                  <span>{editingIndex !== null ? 'Edit Employee' : 'Add Employee'}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -481,10 +496,23 @@ export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = 
                   />
                 </div>
               </CardContent>
-              <CardFooter>
-                  <Button type="button" className="w-full" onClick={handleAddEmployee} disabled={!selectedEmployee || !netPayment}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add to Advice
+              <CardFooter className="flex flex-col gap-2">
+                  <Button type="button" className="w-full" onClick={handleAddOrUpdateEmployee} disabled={!selectedEmployee || !netPayment}>
+                    {editingIndex !== null ? (
+                        <><Edit className="mr-2 h-4 w-4" /> Update Item</>
+                    ) : (
+                        <><PlusCircle className="mr-2 h-4 w-4" /> Add to Advice</>
+                    )}
                   </Button>
+                  {editingIndex !== null && (
+                    <Button type="button" variant="ghost" className="w-full" onClick={() => {
+                        setEditingIndex(null);
+                        setSelectedEmployee(null);
+                        setNetPayment('');
+                    }}>
+                        Cancel Edit
+                    </Button>
+                  )}
               </CardFooter>
             </Card>
           </div>
@@ -506,7 +534,7 @@ export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = 
                                 <TableHead>Employee Name</TableHead>
                                 <TableHead>Designation</TableHead>
                                 <TableHead className="text-right">Net Payment</TableHead>
-                                <TableHead className="w-[50px]"></TableHead>
+                                <TableHead className="w-[100px] text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -522,9 +550,31 @@ export function AdviceComposer({ allEmployees: initialEmployees, adviceToEdit = 
                                         <TableCell className="font-mono">{field.employee.id}</TableCell>
                                         <TableCell>{field.employee.name}</TableCell>
                                         <TableCell>{field.employee.designation}</TableCell>
-                                        <TableCell className="text-right font-mono">{formatCurrency(field.netPayment)}</TableCell>
-                                        <TableCell>
-                                            <Button variant="ghost" size="icon" onClick={() => remove(index)}>
+                                        <TableCell className="w-[180px]">
+                                            <FormField
+                                                control={form.control}
+                                                name={`employees.${index}.netPayment`}
+                                                render={({ field: { onChange, ...restField } }) => (
+                                                    <FormItem>
+                                                        <FormControl>
+                                                            <Input
+                                                                type="number"
+                                                                className="text-right h-9"
+                                                                step="0.01"
+                                                                {...restField}
+                                                                onChange={e => onChange(parseFloat(e.target.value) || 0)}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="ghost" size="icon" type="button" onClick={() => handleStartEditing(index)}>
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" type="button" onClick={() => remove(index)}>
                                                 <Trash2 className="h-4 w-4 text-destructive" />
                                             </Button>
                                         </TableCell>
