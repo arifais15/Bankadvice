@@ -202,7 +202,6 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
           description: `Advice ${updatedData.adviceNumber} has been saved.`,
         });
         router.push('/advices');
-        router.refresh();
       }).catch((serverError) => {
         const permissionError = new FirestorePermissionError({
           path: adviceRef.path,
@@ -230,7 +229,6 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
           description: `Advice ${newAdvice.adviceNumber} has been created as a draft.`,
         });
         router.push('/advices');
-        router.refresh();
       }).catch((serverError) => {
         const permissionError = new FirestorePermissionError({
           path: newAdviceRef.path,
