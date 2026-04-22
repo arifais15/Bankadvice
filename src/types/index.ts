@@ -1,14 +1,15 @@
-export type Payee = {
+export type Employee = {
   id: string;
   name: string;
-  email: string;
+  designation: string;
   bankName: string;
+  branch: string;
   accountNumber: string;
-  branchCode: string;
+  routing: string;
 };
 
-export type AdvicePayeeItem = {
-  payee: Payee;
+export type AdviceEmployeeItem = {
+  employee: Employee;
   netPayment: number;
 };
 
@@ -19,7 +20,7 @@ export type BankAdvice = {
   debitAccount: string;
   date: string; // ISO string
   narrative: string;
-  payees: AdvicePayeeItem[];
+  employees: AdviceEmployeeItem[];
   status: 'Draft' | 'Issued' | 'Archived';
   totalAmount: number;
 };

@@ -64,18 +64,18 @@ export default function PrintAdvicePage() {
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-100">
               <tr>
-                <th className="p-3 font-semibold">PAYEE NAME</th>
+                <th className="p-3 font-semibold">EMPLOYEE NAME</th>
                 <th className="p-3 font-semibold">BANK</th>
                 <th className="p-3 font-semibold">ACCOUNT NO.</th>
                 <th className="p-3 font-semibold text-right">NET PAYMENT</th>
               </tr>
             </thead>
             <tbody>
-              {advice.payees.map((item, index) => (
-                <tr key={item.payee.id} className="border-b">
-                  <td className="p-3 font-medium">{item.payee.name}</td>
-                  <td className="p-3">{item.payee.bankName}</td>
-                  <td className="p-3 font-mono">{item.payee.accountNumber}</td>
+              {advice.employees.map((item, index) => (
+                <tr key={item.employee.id} className="border-b">
+                  <td className="p-3 font-medium">{item.employee.name}</td>
+                  <td className="p-3">{item.employee.bankName}</td>
+                  <td className="p-3 font-mono">{item.employee.accountNumber}</td>
                   <td className="p-3 font-mono text-right">
                     {formatCurrency(item.netPayment)}
                   </td>
@@ -89,8 +89,8 @@ export default function PrintAdvicePage() {
       <footer className="mt-8 pt-8 border-t-2 border-black flex justify-end">
         <div className="text-right">
             <div className="flex items-baseline justify-end gap-4 mb-2">
-                <span className="text-gray-600">Total Number of Payees:</span>
-                <span className="font-bold text-lg">{advice.payees.length}</span>
+                <span className="text-gray-600">Total Number of Employees:</span>
+                <span className="font-bold text-lg">{advice.employees.length}</span>
             </div>
             <div className="flex items-baseline justify-end gap-4">
                 <span className="text-gray-600 text-lg">Total Amount:</span>

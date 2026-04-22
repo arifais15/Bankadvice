@@ -1,6 +1,6 @@
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { advices, payees } from '@/lib/data';
+import { advices, employees } from '@/lib/data';
 import { formatCurrency } from '@/lib/utils';
 import { FileText, Users, Banknote } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   const totalAdvices = advices.length;
-  const totalPayees = payees.length;
+  const totalEmployees = employees.length;
   const totalAmountIssued = advices
     .filter((a) => a.status === 'Issued')
     .reduce((sum, a) => sum + a.totalAmount, 0);
@@ -38,14 +38,14 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Registered Payees
+              Registered Employees
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalPayees}</div>
+            <div className="text-2xl font-bold">{totalEmployees}</div>
             <p className="text-xs text-muted-foreground">
-              payees in your registry
+              employees in your registry
             </p>
           </CardContent>
         </Card>

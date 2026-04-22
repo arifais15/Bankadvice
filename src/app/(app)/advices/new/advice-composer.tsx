@@ -14,11 +14,11 @@ import {
   Loader2,
   FileText,
   ListChecks,
-  UserPlus,
+  Users,
 } from 'lucide-react';
 import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
-import type { Payee, AdvicePayeeItem } from '@/types';
+import type { Employee, AdviceEmployeeItem } from '@/types';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +31,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
@@ -44,6 +43,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
 
 const adviceFormSchema = z.object({
   subject: z.string().min(1, 'Subject is required.'),
@@ -51,29 +51,29 @@ const adviceFormSchema = z.object({
   purpose: z.string().optional(),
   context: z.string().optional(),
   narrative: z.string().min(1, 'Narrative is required.'),
-  payees: z.array(
+  employees: z.array(
     z.object({
-      payee: z.object({ id: z.string(), name: z.string() }),
+      employee: z.object({ id: z.string(), name: z.string() }),
       netPayment: z.number().min(0.01, 'Payment must be greater than 0.'),
     })
-  ).min(1, 'At least one payee is required.'),
+  ).min(1, 'At least one employee is required.'),
 });
 
 type AdviceFormValues = z.infer<typeof adviceFormSchema>;
 
 type AdviceComposerProps = {
-  allPayees: Payee[];
+  allEmployees: Employee[];
 };
 
-export function AdviceComposer({ allPayees }: AdviceComposerProps) {
+export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
 
-  // State for the payee selection combobox
+  // State for the employee selection combobox
   const [open, setOpen] = React.useState(false);
-  const [selectedPayee, setSelectedPayee] = React.useState<Payee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | null>(null);
   const [netPayment, setNetPayment] = React.useState('');
 
   const form = useForm<AdviceFormValues>({
@@ -82,30 +82,30 @@ export function AdviceComposer({ allPayees }: AdviceComposerProps) {
       subject: '',
       debitAccount: '',
       narrative: '',
-      payees: [],
+      employees: [],
     },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: 'payees',
+    name: 'employees',
   });
 
-  const watchPayees = form.watch('payees');
-  const totalAmount = watchPayees.reduce(
+  const watchEmployees = form.watch('employees');
+  const totalAmount = watchEmployees.reduce(
     (acc, curr) => acc + (Number(curr.netPayment) || 0),
     0
   );
 
-  const handleAddPayee = () => {
-    if (selectedPayee && netPayment) {
+  const handleAddEmployee = () => {
+    if (selectedEmployee && netPayment) {
       const paymentAmount = parseFloat(netPayment);
       if (paymentAmount > 0) {
         append({
-          payee: { id: selectedPayee.id, name: selectedPayee.name },
+          employee: { id: selectedEmployee.id, name: selectedEmployee.name },
           netPayment: paymentAmount,
         });
-        setSelectedPayee(null);
+        setSelectedEmployee(null);
         setNetPayment('');
       }
     }
@@ -190,7 +190,7 @@ export function AdviceComposer({ allPayees }: AdviceComposerProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <FileText className="h-5 w-5 text-primary" />
                   <span>Advice Details</span>
                 </CardTitle>
               </CardHeader>
@@ -227,7 +227,7 @@ export function AdviceComposer({ allPayees }: AdviceComposerProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-muted-foreground" />
+                  <Sparkles className="h-5 w-5 text-primary" />
                   <span>Narrative Assistant</span>
                 </CardTitle>
               </CardHeader>
@@ -290,13 +290,13 @@ export function AdviceComposer({ allPayees }: AdviceComposerProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <UserPlus className="h-5 w-5 text-muted-foreground" />
-                  <span>Add Payee</span>
+                  <Users className="h-5 w-5 text-primary" />
+                  <span>Add Employee</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                    <Label>Payee</Label>
+                    <Label>Employee</Label>
                     <Popover open={open} onOpenChange={setOpen}>
                       <PopoverTrigger asChild>
                         <Button
@@ -305,30 +305,30 @@ export function AdviceComposer({ allPayees }: AdviceComposerProps) {
                           aria-expanded={open}
                           className="w-full justify-between font-normal"
                         >
-                          {selectedPayee
-                            ? allPayees.find((p) => p.id === selectedPayee.id)?.name
-                            : 'Select payee...'}
+                          {selectedEmployee
+                            ? allEmployees.find((p) => p.id === selectedEmployee.id)?.name
+                            : 'Select employee...'}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command>
-                          <CommandInput placeholder="Search payee by name..." />
-                          <CommandEmpty>No payee found.</CommandEmpty>
+                          <CommandInput placeholder="Search employee by name..." />
+                          <CommandEmpty>No employee found.</CommandEmpty>
                           <CommandGroup>
-                            {allPayees.map((p) => (
+                            {allEmployees.map((p) => (
                               <CommandItem
                                 key={p.id}
                                 value={p.name}
                                 onSelect={() => {
-                                  setSelectedPayee(p);
+                                  setSelectedEmployee(p);
                                   setOpen(false);
                                 }}
                               >
                                 <Check
                                   className={cn(
                                     'mr-2 h-4 w-4',
-                                    selectedPayee?.id === p.id ? 'opacity-100' : 'opacity-0'
+                                    selectedEmployee?.id === p.id ? 'opacity-100' : 'opacity-0'
                                   )}
                                 />
                                 {p.name}
@@ -350,7 +350,7 @@ export function AdviceComposer({ allPayees }: AdviceComposerProps) {
                 </div>
               </CardContent>
               <CardFooter>
-                  <Button type="button" className="w-full" onClick={handleAddPayee} disabled={!selectedPayee || !netPayment}>
+                  <Button type="button" className="w-full" onClick={handleAddEmployee} disabled={!selectedEmployee || !netPayment}>
                     <PlusCircle className="mr-2 h-4 w-4" /> Add to Advice
                   </Button>
               </CardFooter>
@@ -361,15 +361,15 @@ export function AdviceComposer({ allPayees }: AdviceComposerProps) {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <ListChecks className="h-5 w-5 text-muted-foreground" />
-                  <span>Payee Breakdown</span>
+                  <ListChecks className="h-5 w-5 text-primary" />
+                  <span>Employee Breakdown</span>
                 </CardTitle>
             </CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Payee Name</TableHead>
+                            <TableHead>Employee Name</TableHead>
                             <TableHead className="text-right">Net Payment</TableHead>
                             <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
@@ -378,13 +378,13 @@ export function AdviceComposer({ allPayees }: AdviceComposerProps) {
                         {fields.length === 0 ? (
                              <TableRow>
                                 <TableCell colSpan={3} className="h-24 text-center">
-                                    No payees added yet.
+                                    No employees added yet.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             fields.map((field, index) => (
                                 <TableRow key={field.id}>
-                                    <TableCell>{field.payee.name}</TableCell>
+                                    <TableCell>{field.employee.name}</TableCell>
                                     <TableCell className="text-right">{formatCurrency(field.netPayment)}</TableCell>
                                     <TableCell>
                                         <Button variant="ghost" size="icon" onClick={() => remove(index)}>

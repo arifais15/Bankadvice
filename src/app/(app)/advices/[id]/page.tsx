@@ -71,7 +71,7 @@ export default function AdviceDetailsPage({ params }: { params: { id: string } }
             <Badge
               variant={
                 advice.status === 'Issued'
-                  ? 'default'
+                  ? 'success'
                   : advice.status === 'Draft'
                   ? 'secondary'
                   : 'outline'
@@ -90,25 +90,25 @@ export default function AdviceDetailsPage({ params }: { params: { id: string } }
           </div>
           <Separator />
           <div>
-            <h3 className="font-semibold mb-2">Payee Breakdown</h3>
+            <h3 className="font-semibold mb-2">Employee Breakdown</h3>
             <div className="border rounded-md">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Payee Name</TableHead>
+                    <TableHead>Employee Name</TableHead>
                     <TableHead>Bank</TableHead>
                     <TableHead>Account No.</TableHead>
                     <TableHead className="text-right">Net Payment</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {advice.payees.map((item) => (
-                    <TableRow key={item.payee.id}>
+                  {advice.employees.map((item) => (
+                    <TableRow key={item.employee.id}>
                       <TableCell className="font-medium">
-                        {item.payee.name}
+                        {item.employee.name}
                       </TableCell>
-                      <TableCell>{item.payee.bankName}</TableCell>
-                      <TableCell>{item.payee.accountNumber}</TableCell>
+                      <TableCell>{item.employee.bankName}</TableCell>
+                      <TableCell>{item.employee.accountNumber}</TableCell>
                       <TableCell className="text-right">
                         {formatCurrency(item.netPayment)}
                       </TableCell>

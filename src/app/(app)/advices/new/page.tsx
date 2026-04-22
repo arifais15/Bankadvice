@@ -1,6 +1,6 @@
 import { PageHeader } from '@/components/page-header';
 import { AdviceComposer } from './advice-composer';
-import { payees } from '@/lib/data';
+import { employees } from '@/lib/data';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function NewAdvicePage() {
   // In a real app, you'd fetch this from your DB
-  const payeeList = payees;
+  const employeeList = employees;
 
   return (
     <div className="flex flex-col gap-8">
@@ -17,7 +17,7 @@ export default function NewAdvicePage() {
         title="New Bank Advice"
         description="Compile a new bank advice document for payment processing."
       />
-      <AdviceComposer allPayees={payeeList} />
+      <AdviceComposer allEmployees={employeeList} />
     </div>
   );
 }

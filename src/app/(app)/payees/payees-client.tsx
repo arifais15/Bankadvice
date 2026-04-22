@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import type { Payee } from '@/types';
+import type { Employee } from '@/types';
 
 import {
   Table,
@@ -43,50 +43,56 @@ import {
 import { MoreHorizontal, PlusCircle, Upload, Edit, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-const payeeSchema = z.object({
+const employeeSchema = z.object({
+  id: z.string().min(1, 'Employee ID is required.'),
   name: z.string().min(1, 'Name is required.'),
-  email: z.string().email('Invalid email address.'),
+  designation: z.string().min(1, 'Designation is required.'),
   bankName: z.string().min(1, 'Bank name is required.'),
+  branch: z.string().min(1, 'Branch is required.'),
   accountNumber: z.string().min(1, 'Account number is required.'),
-  branchCode: z.string().min(1, 'Branch code is required.'),
+  routing: z.string().min(1, 'Routing number is required.'),
 });
 
-type PayeeFormValues = z.infer<typeof payeeSchema>;
+type EmployeeFormValues = z.infer<typeof employeeSchema>;
 
 type PayeesClientProps = {
-  data: Payee[];
+  data: Employee[];
 };
 
 export function PayeesClient({ data }: PayeesClientProps) {
-  const [payees, setPayees] = React.useState(data);
+  const [employees, setEmployees] = React.useState(data);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [editingPayee, setEditingPayee] = React.useState<Payee | null>(null);
+  const [editingEmployee, setEditingEmployee] = React.useState<Employee | null>(null);
 
   const { toast } = useToast();
 
-  const form = useForm<PayeeFormValues>({
-    resolver: zodResolver(payeeSchema),
+  const form = useForm<EmployeeFormValues>({
+    resolver: zodResolver(employeeSchema),
     defaultValues: {
+      id: '',
       name: '',
-      email: '',
+      designation: '',
       bankName: '',
+      branch: '',
       accountNumber: '',
-      branchCode: '',
+      routing: '',
     },
   });
 
-  const handleOpenForm = (payee: Payee | null) => {
-    setEditingPayee(payee);
-    if (payee) {
-      form.reset(payee);
+  const handleOpenForm = (employee: Employee | null) => {
+    setEditingEmployee(employee);
+    if (employee) {
+      form.reset(employee);
     } else {
       form.reset({
+        id: '',
         name: '',
-        email: '',
+        designation: '',
         bankName: '',
+        branch: '',
         accountNumber: '',
-        branchCode: '',
+        routing: '',
       });
     }
     setIsFormOpen(true);
@@ -97,24 +103,24 @@ export function PayeesClient({ data }: PayeesClientProps) {
     // For this demo, we'll just show a toast.
     toast({
         title: "Feature not implemented",
-        description: "Bulk payee uploading is planned for a future release.",
+        description: "Bulk employee uploading is planned for a future release.",
     });
   };
 
-  const onSubmit = async (formData: PayeeFormValues) => {
+  const onSubmit = async (formData: EmployeeFormValues) => {
     setIsSubmitting(true);
     // Simulate server action
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    if (editingPayee) {
-      // Update existing payee
-      setPayees(payees.map(p => p.id === editingPayee.id ? { ...p, ...formData } : p));
-      toast({ title: "Payee Updated", description: `${formData.name}'s details have been saved.` });
+    if (editingEmployee) {
+      // Update existing employee
+      setEmployees(employees.map(p => p.id === editingEmployee.id ? { ...p, ...formData } : p));
+      toast({ title: "Employee Updated", description: `${formData.name}'s details have been saved.` });
     } else {
-      // Add new payee
-      const newPayee: Payee = { id: `payee-${Date.now()}`, ...formData };
-      setPayees([...payees, newPayee]);
-      toast({ title: "Payee Added", description: `${formData.name} has been added to the registry.` });
+      // Add new employee
+      const newEmployee: Employee = { ...formData };
+      setEmployees([...employees, newEmployee]);
+      toast({ title: "Employee Added", description: `${formData.name} has been added to the registry.` });
     }
 
     setIsSubmitting(false);
@@ -128,7 +134,7 @@ export function PayeesClient({ data }: PayeesClientProps) {
             <Upload className="mr-2" /> Bulk Upload
         </Button>
         <Button onClick={() => handleOpenForm(null)}>
-          <PlusCircle className="mr-2" /> Add Payee
+          <PlusCircle className="mr-2" /> Add Employee
         </Button>
       </div>
 
@@ -137,19 +143,23 @@ export function PayeesClient({ data }: PayeesClientProps) {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Employee ID</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead>Designation</TableHead>
                 <TableHead>Bank</TableHead>
                 <TableHead>Account Number</TableHead>
                 <TableHead className="w-[50px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {payees.length > 0 ? (
-                payees.map((payee) => (
-                  <TableRow key={payee.id}>
-                    <TableCell className="font-medium">{payee.name}</TableCell>
-                    <TableCell>{payee.bankName}</TableCell>
-                    <TableCell>{payee.accountNumber}</TableCell>
+              {employees.length > 0 ? (
+                employees.map((employee) => (
+                  <TableRow key={employee.id}>
+                    <TableCell className="font-medium">{employee.id}</TableCell>
+                    <TableCell>{employee.name}</TableCell>
+                    <TableCell>{employee.designation}</TableCell>
+                    <TableCell>{employee.bankName}</TableCell>
+                    <TableCell>{employee.accountNumber}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -158,7 +168,7 @@ export function PayeesClient({ data }: PayeesClientProps) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleOpenForm(payee)}>
+                          <DropdownMenuItem onClick={() => handleOpenForm(employee)}>
                             <Edit className="mr-2" /> Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive" onClick={() => alert("Delete not implemented")}>
@@ -171,8 +181,8 @@ export function PayeesClient({ data }: PayeesClientProps) {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
-                    No payees found.
+                  <TableCell colSpan={6} className="h-24 text-center">
+                    No employees found.
                   </TableCell>
                 </TableRow>
               )}
@@ -184,13 +194,20 @@ export function PayeesClient({ data }: PayeesClientProps) {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingPayee ? 'Edit Payee' : 'Add New Payee'}</DialogTitle>
+            <DialogTitle>{editingEmployee ? 'Edit Employee' : 'Add New Employee'}</DialogTitle>
             <DialogDescription>
-              {editingPayee ? "Update the payee's details below." : "Enter the new payee's details."}
+              {editingEmployee ? "Update the employee's details below." : "Enter the new employee's details."}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField control={form.control} name="id" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Employee ID</FormLabel>
+                  <FormControl><Input {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
                <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>
@@ -198,9 +215,9 @@ export function PayeesClient({ data }: PayeesClientProps) {
                   <FormMessage />
                 </FormItem>
               )} />
-               <FormField control={form.control} name="email" render={({ field }) => (
+               <FormField control={form.control} name="designation" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Designation</FormLabel>
                   <FormControl><Input {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -213,9 +230,9 @@ export function PayeesClient({ data }: PayeesClientProps) {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="branchCode" render={({ field }) => (
+                <FormField control={form.control} name="branch" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Branch Code</FormLabel>
+                    <FormLabel>Branch</FormLabel>
                     <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -228,11 +245,18 @@ export function PayeesClient({ data }: PayeesClientProps) {
                   <FormMessage />
                 </FormItem>
               )} />
+               <FormField control={form.control} name="routing" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Routing Number</FormLabel>
+                  <FormControl><Input {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting && <Loader2 className="mr-2 animate-spin" />}
-                  {editingPayee ? 'Save Changes' : 'Add Payee'}
+                  {editingEmployee ? 'Save Changes' : 'Add Employee'}
                 </Button>
               </DialogFooter>
             </form>

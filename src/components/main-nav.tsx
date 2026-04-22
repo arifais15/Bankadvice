@@ -17,7 +17,7 @@ import {
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/advices', icon: FileText, label: 'Advices' },
-  { href: '/payees', icon: Users, label: 'Payees' },
+  { href: '/payees', icon: Users, label: 'Employees' },
 ];
 
 export function MainNav() {
