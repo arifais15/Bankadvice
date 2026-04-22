@@ -196,22 +196,21 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
     if (isEditMode && adviceToEdit) {
       const adviceRef = doc(firestore, 'advices', adviceToEdit.id);
       const updatedData = { ...adviceToEdit, ...data, totalAmount };
-      setDoc(adviceRef, updatedData, { merge: true }).then(() => {
-        toast({
-          title: 'Advice Updated',
-          description: `Advice ${updatedData.adviceNumber} has been saved.`,
-        });
-        router.push('/advices');
-      }).catch((serverError) => {
+      setDoc(adviceRef, updatedData, { merge: true }).catch((serverError) => {
         const permissionError = new FirestorePermissionError({
           path: adviceRef.path,
           operation: 'update',
           requestResourceData: updatedData,
         });
         errorEmitter.emit('permission-error', permissionError);
-      }).finally(() => {
-        setIsSubmitting(false);
       });
+      
+      toast({
+        title: 'Advice Updated',
+        description: `Advice ${updatedData.adviceNumber} has been saved.`,
+      });
+      router.push('/advices');
+
     } else {
       const adviceCollection = collection(firestore, 'advices');
       const newAdviceRef = doc(adviceCollection);
@@ -223,22 +222,20 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
         status: 'Draft' as const,
         totalAmount: totalAmount,
       };
-      setDoc(newAdviceRef, newAdvice).then(() => {
-        toast({
-          title: 'Advice Created',
-          description: `Advice ${newAdvice.adviceNumber} has been created as a draft.`,
-        });
-        router.push('/advices');
-      }).catch((serverError) => {
+      setDoc(newAdviceRef, newAdvice).catch((serverError) => {
         const permissionError = new FirestorePermissionError({
           path: newAdviceRef.path,
           operation: 'create',
           requestResourceData: newAdvice,
         });
         errorEmitter.emit('permission-error', permissionError);
-      }).finally(() => {
-        setIsSubmitting(false);
       });
+
+      toast({
+        title: 'Advice Created',
+        description: `Advice ${newAdvice.adviceNumber} has been created as a draft.`,
+      });
+      router.push('/advices');
     }
   };
 
