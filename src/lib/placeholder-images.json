@@ -1,1 +1,16 @@
-{"placeholderImages":[]"
+{
+  "placeholderImages": [
+    {
+      "id": "company-logo",
+      "description": "A circular green and blue company logo with some text and a symbol in the middle.",
+      "imageUrl": "https://picsum.photos/seed/logo1/100/100",
+      "imageHint": "company logo"
+    },
+    {
+      "id": "company-seal",
+      "description": "A circular blue seal, looks like a stamp.",
+      "imageUrl": "https://picsum.photos/seed/seal1/100/100",
+      "imageHint": "company seal"
+    }
+  ]
+}

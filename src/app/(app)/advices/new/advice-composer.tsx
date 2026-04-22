@@ -15,10 +15,11 @@ import {
   FileText,
   ListChecks,
   Users,
+  Bank,
 } from 'lucide-react';
 import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
-import type { Employee, AdviceEmployeeItem } from '@/types';
+import type { Employee } from '@/types';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,14 +47,17 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 
 const adviceFormSchema = z.object({
+  refNo: z.string().min(1, 'Reference No. is required.'),
   subject: z.string().min(1, 'Subject is required.'),
   debitAccount: z.string().min(1, 'Debit account is required.'),
+  bankName: z.string().min(1, 'Recipient bank name is required.'),
+  bankBranch: z.string().min(1, 'Recipient bank branch is required.'),
   purpose: z.string().optional(),
   context: z.string().optional(),
   narrative: z.string().min(1, 'Narrative is required.'),
   employees: z.array(
     z.object({
-      employee: z.object({ id: z.string(), name: z.string() }),
+      employee: z.custom<Employee>(),
       netPayment: z.number().min(0.01, 'Payment must be greater than 0.'),
     })
   ).min(1, 'At least one employee is required.'),
@@ -79,8 +83,11 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
   const form = useForm<AdviceFormValues>({
     resolver: zodResolver(adviceFormSchema),
     defaultValues: {
+      refNo: '',
       subject: '',
       debitAccount: '',
+      bankName: '',
+      bankBranch: '',
       narrative: '',
       employees: [],
     },
@@ -102,7 +109,7 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
       const paymentAmount = parseFloat(netPayment);
       if (paymentAmount > 0) {
         append({
-          employee: { id: selectedEmployee.id, name: selectedEmployee.name },
+          employee: selectedEmployee,
           netPayment: paymentAmount,
         });
         setSelectedEmployee(null);
@@ -185,7 +192,7 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           <div className="lg:col-span-2 space-y-8">
             <Card>
               <CardHeader>
@@ -194,15 +201,15 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
                   <span>Advice Details</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="subject"
+                  name="refNo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Subject</FormLabel>
+                      <FormLabel>Reference No.</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Monthly Payroll - May 2024" {...field} />
+                        <Input placeholder="e.g., 27.12.3330.537.03.043.26" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -221,6 +228,56 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
                     </FormItem>
                   )}
                 />
+                 <FormField
+                  control={form.control}
+                  name="subject"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Subject</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Monthly Payroll - May 2024" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+             <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bank className="h-5 w-5 text-primary" />
+                  <span>Recipient Bank</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="bankName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bank Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Agrani Bank PLC" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="bankBranch"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Branch Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Rajabari Bazar Branch" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
               </CardContent>
             </Card>
 
@@ -366,36 +423,42 @@ export function AdviceComposer({ allEmployees }: AdviceComposerProps) {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Employee Name</TableHead>
-                            <TableHead className="text-right">Net Payment</TableHead>
-                            <TableHead className="w-[50px]"></TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {fields.length === 0 ? (
-                             <TableRow>
-                                <TableCell colSpan={3} className="h-24 text-center">
-                                    No employees added yet.
-                                </TableCell>
+                <div className="border rounded-md">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>ID</TableHead>
+                                <TableHead>Employee Name</TableHead>
+                                <TableHead>Designation</TableHead>
+                                <TableHead className="text-right">Net Payment</TableHead>
+                                <TableHead className="w-[50px]"></TableHead>
                             </TableRow>
-                        ) : (
-                            fields.map((field, index) => (
-                                <TableRow key={field.id}>
-                                    <TableCell>{field.employee.name}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(field.netPayment)}</TableCell>
-                                    <TableCell>
-                                        <Button variant="ghost" size="icon" onClick={() => remove(index)}>
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
+                        </TableHeader>
+                        <TableBody>
+                            {fields.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-24 text-center">
+                                        No employees added yet.
                                     </TableCell>
                                 </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
+                            ) : (
+                                fields.map((field, index) => (
+                                    <TableRow key={field.id}>
+                                        <TableCell className="font-mono">{field.employee.id}</TableCell>
+                                        <TableCell>{field.employee.name}</TableCell>
+                                        <TableCell>{field.employee.designation}</TableCell>
+                                        <TableCell className="text-right font-mono">{formatCurrency(field.netPayment)}</TableCell>
+                                        <TableCell>
+                                            <Button variant="ghost" size="icon" onClick={() => remove(index)}>
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-4 items-center bg-muted/50 py-4 px-6">
                 <span className="text-sm text-muted-foreground">Total Amount</span>

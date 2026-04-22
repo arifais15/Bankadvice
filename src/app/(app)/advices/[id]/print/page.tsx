@@ -2,13 +2,16 @@
 
 import React, { useEffect } from 'react';
 import { notFound, useParams } from 'next/navigation';
+import Image from 'next/image';
 import { advices } from '@/lib/data';
-import { formatCurrency } from '@/lib/utils';
-import { Logo } from '@/components/logo';
+import { formatCurrency, amountToWords } from '@/lib/utils';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function PrintAdvicePage() {
   const params = useParams();
   const advice = advices.find((a) => a.id === params.id);
+  const companyLogo = PlaceHolderImages.find(p => p.id === 'company-logo');
+  const companySeal = PlaceHolderImages.find(p => p.id === 'company-seal');
 
   useEffect(() => {
     // Automatically trigger print dialog when component mounts
@@ -18,89 +21,117 @@ export default function PrintAdvicePage() {
   }, []);
 
   if (!advice) {
-    // This will show a 404 on the server render, but the client will handle it.
-    // In a real app, you might want a more graceful loading/error state here.
     useEffect(() => notFound(), []);
     return null;
   }
-
+  
   return (
-    <div className="p-8 max-w-4xl mx-auto font-sans">
-      <header className="flex justify-between items-start pb-4 border-b-2 border-black">
-        <Logo />
+    <div className="p-8 max-w-5xl mx-auto font-serif bg-white text-black text-sm print:text-xs">
+      <header className="flex justify-between items-start pb-4">
+        <div className="flex items-center gap-4">
+          {companyLogo && <Image src={companyLogo.imageUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogo.imageHint} />}
+          <div>
+            <h1 className="text-2xl font-bold font-sans">গাজীপুর পল্লী বিদ্যুৎ সমিতি-২</h1>
+            <h2 className="text-xl font-sans">Gazipur Palli Bidyut Samity-2</h2>
+          </div>
+        </div>
         <div className="text-right">
-          <h1 className="text-3xl font-bold">Bank Payment Advice</h1>
-          <p className="text-lg font-mono">{advice.adviceNumber}</p>
+          <div className="flex justify-end items-center gap-2">
+            <div className="font-sans">
+              <p className="font-bold">সদর দপ্তর</p>
+              <p>রাজেন্দ্রপুর গাজীপুর</p>
+              <p>টেলিফোন: ০২-৯২০১৭৮৩</p>
+              <p>E-mail: gazipbs2@gmail.com</p>
+            </div>
+             {companySeal && <Image src={companySeal.imageUrl} alt="Company Seal" width={70} height={70} data-ai-hint={companySeal.imageHint}/>}
+          </div>
         </div>
       </header>
 
-      <main className="mt-8">
-        <div className="grid grid-cols-2 gap-8 mb-8 text-sm">
-          <div>
-            <h2 className="font-bold text-gray-600 mb-1">SUBJECT</h2>
-            <p>{advice.subject}</p>
-          </div>
-          <div>
-            <h2 className="font-bold text-gray-600 mb-1">DATE</h2>
-            <p>{new Date(advice.date).toLocaleDateString()}</p>
-          </div>
-          <div>
-            <h2 className="font-bold text-gray-600 mb-1">DEBIT ACCOUNT</h2>
-            <p className="font-mono">{advice.debitAccount}</p>
-          </div>
-          <div>
-            <h2 className="font-bold text-gray-600 mb-1">STATUS</h2>
-            <p>{advice.status}</p>
-          </div>
-        </div>
+      <div className="border-t-2 border-b-2 border-black my-2"></div>
 
-        <div className="mb-8">
-            <h2 className="font-bold text-gray-600 mb-1">NARRATIVE</h2>
-            <p className="text-sm border p-4 bg-gray-50 rounded-md">{advice.narrative}</p>
-        </div>
-
+      <div className="flex justify-between mt-4">
         <div>
-          <h2 className="text-xl font-bold mb-4">Payment Breakdown</h2>
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-3 font-semibold">EMPLOYEE NAME</th>
-                <th className="p-3 font-semibold">BANK</th>
-                <th className="p-3 font-semibold">ACCOUNT NO.</th>
-                <th className="p-3 font-semibold text-right">NET PAYMENT</th>
+          <p>Ref.No: {advice.refNo}</p>
+        </div>
+        <div className="text-right">
+          <p>Date: {new Date(advice.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          <p className="font-bold">Advice No: {advice.adviceNumber}</p>
+        </div>
+      </div>
+
+      <main className="mt-8">
+        <div className="space-y-1">
+            <p>Manager</p>
+            <p>{advice.bankName}</p>
+            <p>{advice.bankBranch}</p>
+        </div>
+        
+        <p className="mt-4"><span className="font-bold">Subject: {advice.subject}</span></p>
+
+        <p className="mt-4 leading-relaxed">
+          You are requested to debit our Account No. {advice.debitAccount} by an amount of {formatCurrency(advice.totalAmount)}
+          ( {amountToWords(advice.totalAmount)} ). The amount is to be transferred via BEFTN to employees' personal savings accounts as per the advice.
+        </p>
+        
+        <div className="mt-4">
+          <table className="w-full text-xs border-collapse border border-black">
+            <thead className="text-left bg-gray-100">
+              <tr className="border-b border-black">
+                <th className="p-1 border-r border-black font-semibold">SL</th>
+                <th className="p-1 border-r border-black font-semibold">ID</th>
+                <th className="p-1 border-r border-black font-semibold">Name</th>
+                <th className="p-1 border-r border-black font-semibold">Designation</th>
+                <th className="p-1 border-r border-black font-semibold">Bank_Name</th>
+                <th className="p-1 border-r border-black font-semibold">Branch_Name</th>
+                <th className="p-1 border-r border-black font-semibold">AccountNumber</th>
+                <th className="p-1 border-r border-black font-semibold">Routing</th>
+                <th className="p-1 text-right font-semibold">NetPay</th>
               </tr>
             </thead>
             <tbody>
               {advice.employees.map((item, index) => (
-                <tr key={item.employee.id} className="border-b">
-                  <td className="p-3 font-medium">{item.employee.name}</td>
-                  <td className="p-3">{item.employee.bankName}</td>
-                  <td className="p-3 font-mono">{item.employee.accountNumber}</td>
-                  <td className="p-3 font-mono text-right">
-                    {formatCurrency(item.netPayment)}
-                  </td>
+                <tr key={item.employee.id} className="border-b border-black">
+                  <td className="p-1 border-r border-black text-center">{index + 1}</td>
+                  <td className="p-1 border-r border-black">{item.employee.id}</td>
+                  <td className="p-1 border-r border-black">{item.employee.name}</td>
+                  <td className="p-1 border-r border-black">{item.employee.designation}</td>
+                  <td className="p-1 border-r border-black">{item.employee.bankName}</td>
+                  <td className="p-1 border-r border-black">{item.employee.branch}</td>
+                  <td className="p-1 border-r border-black font-mono">{item.employee.accountNumber}</td>
+                  <td className="p-1 border-r border-black font-mono">{item.employee.routing}</td>
+                  <td className="p-1 text-right font-mono">{new Intl.NumberFormat('en-IN').format(item.netPayment)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
+        <div className="mt-2 flex justify-between items-center text-xs">
+            <p className="font-bold">Total : {advice.employees.length}</p>
+            <p className="font-bold">Inword : {amountToWords(advice.totalAmount)}</p>
+            <p className="font-bold">GrandTotal {formatCurrency(advice.totalAmount)}</p>
+        </div>
       </main>
 
-      <footer className="mt-8 pt-8 border-t-2 border-black flex justify-end">
-        <div className="text-right">
-            <div className="flex items-baseline justify-end gap-4 mb-2">
-                <span className="text-gray-600">Total Number of Employees:</span>
-                <span className="font-bold text-lg">{advice.employees.length}</span>
-            </div>
-            <div className="flex items-baseline justify-end gap-4">
-                <span className="text-gray-600 text-lg">Total Amount:</span>
-                <span className="font-bold text-2xl">{formatCurrency(advice.totalAmount)}</span>
-            </div>
-        </div>
+      <footer className="mt-24 grid grid-cols-2 gap-16 text-center text-sm">
+          <div>
+              <div className="border-t border-black w-48 mx-auto pt-2">
+                AGM Finance
+                <br/>
+                Gazipur Palli Bidyut Samity-2
+              </div>
+          </div>
+          <div>
+              <div className="border-t border-black w-48 mx-auto pt-2">
+                Senior General Manager
+                <br/>
+                Gazipur Palli Bidyut Samity-2
+              </div>
+          </div>
       </footer>
-      <div className="text-center mt-12 text-xs text-gray-500 no-print">
-        <p>This is a computer-generated document. No signature is required.</p>
-        <p>BankAdviceFlow</p>
+       <div className="text-center mt-12 text-xs text-gray-500 no-print">
+        <p>BankAdviceFlow - A computer-generated document.</p>
       </div>
     </div>
   );

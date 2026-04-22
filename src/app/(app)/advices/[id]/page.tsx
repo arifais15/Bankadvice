@@ -65,7 +65,7 @@ export default function AdviceDetailsPage({ params }: { params: { id: string } }
             <div>
               <CardTitle>{advice.subject}</CardTitle>
               <CardDescription>
-                Debit Account: {advice.debitAccount}
+                Ref.No: {advice.refNo}
               </CardDescription>
             </div>
             <Badge
@@ -82,6 +82,16 @@ export default function AdviceDetailsPage({ params }: { params: { id: string } }
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
+           <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-muted-foreground">Recipient Bank</p>
+              <p className="font-medium">{advice.bankName}, {advice.bankBranch}</p>
+            </div>
+             <div>
+              <p className="text-muted-foreground">Debit Account</p>
+              <p className="font-medium">{advice.debitAccount}</p>
+            </div>
+          </div>
           <div>
             <h3 className="font-semibold mb-2">Narrative</h3>
             <p className="text-sm text-muted-foreground bg-muted/50 p-4 rounded-md">
@@ -95,8 +105,9 @@ export default function AdviceDetailsPage({ params }: { params: { id: string } }
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>ID</TableHead>
                     <TableHead>Employee Name</TableHead>
-                    <TableHead>Bank</TableHead>
+                    <TableHead>Designation</TableHead>
                     <TableHead>Account No.</TableHead>
                     <TableHead className="text-right">Net Payment</TableHead>
                   </TableRow>
@@ -104,12 +115,13 @@ export default function AdviceDetailsPage({ params }: { params: { id: string } }
                 <TableBody>
                   {advice.employees.map((item) => (
                     <TableRow key={item.employee.id}>
+                      <TableCell className="font-mono">{item.employee.id}</TableCell>
                       <TableCell className="font-medium">
                         {item.employee.name}
                       </TableCell>
-                      <TableCell>{item.employee.bankName}</TableCell>
-                      <TableCell>{item.employee.accountNumber}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell>{item.employee.designation}</TableCell>
+                      <TableCell className="font-mono">{item.employee.accountNumber}</TableCell>
+                      <TableCell className="text-right font-mono">
                         {formatCurrency(item.netPayment)}
                       </TableCell>
                     </TableRow>

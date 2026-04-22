@@ -147,7 +147,9 @@ export function PayeesClient({ data }: PayeesClientProps) {
                 <TableHead>Name</TableHead>
                 <TableHead>Designation</TableHead>
                 <TableHead>Bank</TableHead>
-                <TableHead>Account Number</TableHead>
+                <TableHead>Branch</TableHead>
+                <TableHead>Account No.</TableHead>
+                <TableHead>Routing</TableHead>
                 <TableHead className="w-[50px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -155,11 +157,13 @@ export function PayeesClient({ data }: PayeesClientProps) {
               {employees.length > 0 ? (
                 employees.map((employee) => (
                   <TableRow key={employee.id}>
-                    <TableCell className="font-medium">{employee.id}</TableCell>
+                    <TableCell className="font-medium font-mono">{employee.id}</TableCell>
                     <TableCell>{employee.name}</TableCell>
                     <TableCell>{employee.designation}</TableCell>
                     <TableCell>{employee.bankName}</TableCell>
-                    <TableCell>{employee.accountNumber}</TableCell>
+                    <TableCell>{employee.branch}</TableCell>
+                    <TableCell className="font-mono">{employee.accountNumber}</TableCell>
+                    <TableCell className="font-mono">{employee.routing}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -181,7 +185,7 @@ export function PayeesClient({ data }: PayeesClientProps) {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     No employees found.
                   </TableCell>
                 </TableRow>
@@ -192,7 +196,7 @@ export function PayeesClient({ data }: PayeesClientProps) {
       </Card>
       
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[625px]">
           <DialogHeader>
             <DialogTitle>{editingEmployee ? 'Edit Employee' : 'Add New Employee'}</DialogTitle>
             <DialogDescription>
@@ -201,20 +205,22 @@ export function PayeesClient({ data }: PayeesClientProps) {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField control={form.control} name="id" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Employee ID</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-               <FormField control={form.control} name="name" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="id" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Employee ID</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="name" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
                <FormField control={form.control} name="designation" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Designation</FormLabel>

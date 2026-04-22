@@ -16,8 +16,11 @@ export type AdviceEmployeeItem = {
 export type BankAdvice = {
   id: string;
   adviceNumber: string;
+  refNo: string;
   subject: string;
   debitAccount: string;
+  bankName: string;
+  bankBranch: string;
   date: string; // ISO string
   narrative: string;
   employees: AdviceEmployeeItem[];
