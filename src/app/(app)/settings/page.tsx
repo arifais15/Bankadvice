@@ -62,19 +62,34 @@ export default function SettingsPage() {
 
   const onSubmit = (data: SettingsFormValues) => {
     setIsSaving(true);
-    const dataToSave = {
-        ...data,
-        watermarkUrl: data.watermarkEnabled ? data.watermarkUrl : '',
-    };
-    localStorage.setItem('printSettings', JSON.stringify(dataToSave));
+    // Use a timeout to give feedback to the user that something is happening
     setTimeout(() => {
-      setIsSaving(false);
-      toast({
-        title: 'Settings Saved',
-        description: 'Your print settings have been updated.',
-      });
-      // Force a re-render in case the logo was updated
-      window.dispatchEvent(new Event('storage'));
+      try {
+        const dataToSave = {
+            ...data,
+            watermarkUrl: data.watermarkEnabled ? data.watermarkUrl : '',
+        };
+        localStorage.setItem('printSettings', JSON.stringify(dataToSave));
+        toast({
+          title: 'Settings Saved',
+          description: 'Your print settings have been updated.',
+        });
+        // Force a re-render in other components listening to storage
+        window.dispatchEvent(new Event('storage'));
+      } catch (error) {
+        let message = 'Could not save settings.';
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+            message = 'An uploaded image is too large. Please use smaller files (e.g., under 1MB).';
+        }
+        toast({
+          variant: 'destructive',
+          title: 'Error Saving Settings',
+          description: message,
+        });
+        console.error("Failed to save settings:", error);
+      } finally {
+        setIsSaving(false);
+      }
     }, 500);
   };
   
