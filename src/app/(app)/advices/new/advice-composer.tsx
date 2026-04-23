@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -404,7 +405,7 @@ export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComp
                                   )}
                                 >
                                   {field.value ? (
-                                    format(field.value, "PPP")
+                                    format(field.value, "dd-MMM-yyyy")
                                   ) : (
                                     <span>Pick a date</span>
                                   )}
