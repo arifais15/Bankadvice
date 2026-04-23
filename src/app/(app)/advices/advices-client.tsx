@@ -62,7 +62,7 @@ export function AdvicesClient() {
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-[50px] text-right">Actions</TableHead>
+              <TableHead className="w-[100px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -93,31 +93,34 @@ export function AdvicesClient() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Actions</span>
+                    <div className="flex items-center justify-end gap-2">
+                        <Button asChild variant="ghost" size="icon">
+                            <Link href={`/advices/${advice.id}/print`} title="Print">
+                                <Printer className="h-4 w-4" />
+                                <span className="sr-only">Print</span>
+                            </Link>
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link href={`/advices/${advice.id}`}>
-                            <Eye className="mr-2 h-4 w-4" /> View Details
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/advices/${advice.id}/edit`}>
-                            <Edit className="mr-2 h-4 w-4" /> Edit
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/advices/${advice.id}/print`}>
-                            <Printer className="mr-2 h-4 w-4" /> Print
-                          </Link>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Actions</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                            <Link href={`/advices/${advice.id}`}>
+                                <Eye className="mr-2 h-4 w-4" /> View Details
+                            </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                            <Link href={`/advices/${advice.id}/edit`}>
+                                <Edit className="mr-2 h-4 w-4" /> Edit
+                            </Link>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
