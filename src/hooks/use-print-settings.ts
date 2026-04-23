@@ -12,7 +12,7 @@ export function usePrintSettings(): { settings: PrintSettings; isLoading: boolea
     try {
       const savedSettings = localStorage.getItem('printSettings');
       if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
+        setSettings({ ...defaultSettings, ...JSON.parse(savedSettings) });
       }
     } catch (error) {
       console.error("Could not load settings from localStorage", error);

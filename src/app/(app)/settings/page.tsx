@@ -28,7 +28,7 @@ export default function SettingsPage() {
     try {
       const savedSettings = localStorage.getItem('printSettings');
       if (savedSettings) {
-        form.reset(JSON.parse(savedSettings));
+        form.reset({ ...defaultSettings, ...JSON.parse(savedSettings) });
       }
     } catch (error) {
       console.error("Could not load settings from localStorage", error);
