@@ -5,10 +5,11 @@ import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { formatCurrency, amountToWords } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import type { BankAdvice, PrintSettings } from '@/types';
+import type { BankAdvice } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { advices } from '@/lib/data';
+import { printSettings } from '@/lib/settings';
 
 
 export default function PrintAdvicePage() {
@@ -17,7 +18,6 @@ export default function PrintAdvicePage() {
   const companySealPlaceholder = PlaceHolderImages.find(p => p.id === 'company-seal');
 
   const [advice, setAdvice] = useState<BankAdvice | null>(null);
-  const [settings, setSettings] = useState<PrintSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -25,16 +25,6 @@ export default function PrintAdvicePage() {
     if (foundAdvice) {
       setAdvice(foundAdvice);
     }
-    
-    try {
-      const storedSettings = localStorage.getItem('printSettings');
-      if (storedSettings) {
-        setSettings(JSON.parse(storedSettings));
-      }
-    } catch (error) {
-      console.error("Could not parse print settings from localStorage", error);
-    }
-
     setIsLoading(false);
   }, [params.id]);
   
@@ -59,6 +49,7 @@ export default function PrintAdvicePage() {
     notFound();
   }
   
+  const settings = printSettings;
   const finalLogoUrl = settings?.companyLogoUrl || companyLogoPlaceholder?.imageUrl;
   const finalSealUrl = settings?.companySealUrl || companySealPlaceholder?.imageUrl;
   const watermarkEnabled = settings?.watermarkEnabled || false;

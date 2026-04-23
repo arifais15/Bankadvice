@@ -31,7 +31,6 @@ export type BankAdvice = {
 };
 
 export type PrintSettings = {
-  id: 'print';
   companyLogoUrl?: string;
   companySealUrl?: string;
   watermarkEnabled?: boolean;
