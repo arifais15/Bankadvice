@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { format } from 'date-fns';
 import {
   ChevronsUpDown,
   Check,
@@ -17,6 +18,7 @@ import {
   Users,
   Landmark,
   Edit,
+  CalendarIcon,
 } from 'lucide-react';
 import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
@@ -55,11 +57,13 @@ import {
   DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
+import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 
 const adviceFormSchema = z.object({
   refNo: z.string().min(1, 'Reference No. is required.'),
+  date: z.date({ required_error: 'Advice date is required.' }),
   subject: z.string().min(1, 'Subject is required.'),
   debitAccount: z.string().min(1, 'Debit account is required.'),
   bankName: z.string().min(1, 'Recipient bank name is required.'),
@@ -96,6 +100,8 @@ export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComp
   const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
   
   const [subjects, setSubjects] = React.useState<string[]>(defaultSubjects);
+  
+  const defaultRefNo = `27.12.3330.537.03.043.${new Date().getFullYear().toString().slice(-2)}`;
 
   React.useEffect(() => {
     try {
@@ -113,10 +119,12 @@ export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComp
     resolver: zodResolver(adviceFormSchema),
     defaultValues: adviceToEdit ? {
         ...adviceToEdit,
+        date: new Date(adviceToEdit.date),
         purpose: adviceToEdit.purpose || '',
         context: adviceToEdit.context || '',
     } : {
-      refNo: '27.12.3330.537.03.043.26',
+      refNo: defaultRefNo,
+      date: new Date(),
       subject: '',
       debitAccount: 'CD-0200017857835',
       bankName: 'Agrani Bank PLC',
@@ -208,11 +216,16 @@ export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComp
         localStorage.setItem('customSubjects', JSON.stringify(newCustomSubjects));
         setSubjects(prev => [...new Set([...prev, data.subject])]);
       }
+      
+      const advicePayload = {
+        ...data,
+        date: data.date.toISOString(),
+      };
 
       if (isEditMode && adviceToEdit) {
         const adviceIndex = advices.findIndex(a => a.id === adviceToEdit.id);
         if (adviceIndex !== -1) {
-          advices[adviceIndex] = { ...advices[adviceIndex], ...data, totalAmount };
+          advices[adviceIndex] = { ...advices[adviceIndex], ...advicePayload, totalAmount };
         }
         toast({
           title: 'Advice Updated',
@@ -220,10 +233,9 @@ export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComp
         });
       } else {
         const newAdvice: BankAdvice = {
-          ...data,
+          ...advicePayload,
           id: (advices.length + 1).toString(),
           adviceNumber: generateAdviceNumber(),
-          date: new Date().toISOString(),
           status: 'Draft' as const,
           totalAmount: totalAmount,
         };
@@ -352,28 +364,68 @@ export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComp
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <FormField
-                  control={form.control}
-                  name="subject"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Subject</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Monthly Payroll - May 2024"
-                          {...field}
-                          list="subject-suggestions"
-                        />
-                      </FormControl>
-                      <datalist id="subject-suggestions">
-                        {subjects.map((subject) => (
-                          <option key={subject} value={subject} />
-                        ))}
-                      </datalist>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                    control={form.control}
+                    name="subject"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Subject</FormLabel>
+                        <FormControl>
+                            <Input
+                            placeholder="e.g., Monthly Payroll - May 2024"
+                            {...field}
+                            list="subject-suggestions"
+                            />
+                        </FormControl>
+                        <datalist id="subject-suggestions">
+                            {subjects.map((subject) => (
+                            <option key={subject} value={subject} />
+                            ))}
+                        </datalist>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="date"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col pt-2">
+                          <FormLabel>Advice Date</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP")
+                                  ) : (
+                                    <span>Pick a date</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                </div>
               </CardContent>
             </Card>
 
