@@ -74,14 +74,14 @@ export default function PrintAdvicePage() {
       <div className="relative z-10">
          <header className="grid grid-cols-3 items-center pb-4 font-sans">
           <div className="flex items-center">
-            {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogoPlaceholder?.imageHint} className="object-contain" />}
+            {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogoPlaceholder?.imageHint} className="object-contain" unoptimized />}
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold whitespace-nowrap font-nikosh">{headerSettings.headerLine1}</h1>
             <h2 className="text-xl">{headerSettings.headerLine2}</h2>
           </div>
           <div className="text-right">
-             {finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={70} height={70} data-ai-hint={companySealPlaceholder?.imageHint} className="ml-auto opacity-70 object-contain" />}
+             {finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={70} height={70} data-ai-hint={companySealPlaceholder?.imageHint} className="ml-auto opacity-70 object-contain" unoptimized />}
             <p className="text-xs font-nikosh">{headerSettings.headerLine3}</p>
             <p className="text-xs font-nikosh">{headerSettings.headerLine4}</p>
           </div>

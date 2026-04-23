@@ -1,5 +1,7 @@
 'use client';
 
+import React, { useEffect, useState } from 'react';![CDATA['use client';
+
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
@@ -126,7 +128,7 @@ export default function SettingsPage() {
                   <FormDescription>Used in the sidebar and print headers.</FormDescription>
                   {watchedValues.companyLogoUrl && (
                     <div className="mt-4 relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
-                      <Image src={watchedValues.companyLogoUrl} alt="Logo Preview" fill style={{ objectFit: 'contain' }} />
+                      <Image src={watchedValues.companyLogoUrl} alt="Logo Preview" fill style={{ objectFit: 'contain' }} unoptimized />
                     </div>
                   )}
                 </FormItem>
@@ -144,7 +146,7 @@ export default function SettingsPage() {
                   <FormDescription>Used on printed documents.</FormDescription>
                   {watchedValues.companySealUrl && (
                     <div className="mt-4 relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
-                      <Image src={watchedValues.companySealUrl} alt="Seal Preview" fill style={{ objectFit: 'contain' }} />
+                      <Image src={watchedValues.companySealUrl} alt="Seal Preview" fill style={{ objectFit: 'contain' }} unoptimized />
                     </div>
                   )}
                 </FormItem>
@@ -210,7 +212,7 @@ export default function SettingsPage() {
                       <FormDescription>If empty, the company logo will be used as the watermark.</FormDescription>
                        {watchedValues.watermarkUrl && (
                         <div className="mt-4 relative w-40 h-40 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
-                            <Image src={watchedValues.watermarkUrl} alt="Watermark Preview" fill style={{ objectFit: 'contain' }} />
+                            <Image src={watchedValues.watermarkUrl} alt="Watermark Preview" fill style={{ objectFit: 'contain' }} unoptimized />
                         </div>
                         )}
                     </FormItem>

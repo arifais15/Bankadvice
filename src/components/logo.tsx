@@ -26,7 +26,7 @@ export function Logo({ className }: { className?: string }) {
          {isLoading ? (
             <Skeleton className="h-8 w-8 rounded-sm" />
          ) : finalLogoUrl ? (
-            <Image src={finalLogoUrl} alt="Logo" width={32} height={32} data-ai-hint={fallbackLogo?.imageHint || 'company logo'} className="rounded-sm object-contain" />
+            <Image src={finalLogoUrl} alt="Logo" width={32} height={32} data-ai-hint={fallbackLogo?.imageHint || 'company logo'} className="rounded-sm object-contain" unoptimized />
          ) : (
             <Landmark className="h-5 w-5 text-primary-foreground" />
          )}
