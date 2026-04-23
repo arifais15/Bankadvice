@@ -1,7 +1,9 @@
+
 'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
+import { format } from 'date-fns';
 import {
   Table,
   TableBody,
@@ -74,7 +76,7 @@ export function AdvicesClient() {
                   </TableCell>
                   <TableCell>{advice.subject}</TableCell>
                   <TableCell>
-                    {new Date(advice.date).toLocaleDateString()}
+                    {format(new Date(advice.date), 'dd-MMM-yyyy')}
                   </TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(advice.totalAmount)}

@@ -1,8 +1,10 @@
+
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
 import { useParams, notFound } from 'next/navigation';
+import { format } from 'date-fns';
 import { Printer, Loader2, ArrowLeft } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { PageHeader } from '@/components/page-header';
@@ -57,9 +59,10 @@ export default function AdviceDetailsPage() {
     <div className="flex flex-col gap-8">
       <PageHeader
         title={advice.adviceNumber}
-        description={`Details for bank advice created on ${new Date(
-          advice.date
-        ).toLocaleDateString()}`}
+        description={`Details for bank advice created on ${format(
+          new Date(advice.date),
+          'do MMMM yyyy'
+        )}`}
       >
         <div className="flex items-center gap-2">
             <Button asChild variant="outline">

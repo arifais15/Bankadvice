@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { format } from 'date-fns';
 import { formatCurrency, amountToWords } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { BankAdvice } from '@/types';
@@ -168,7 +169,7 @@ export default function PrintAdvicePage() {
                 <p>Ref.No: {advice.refNo}</p>
               </div>
               <div className="text-right">
-                <p>Date: {new Date(advice.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                <p>Date: {format(new Date(advice.date), 'dd-MMM-yyyy')}</p>
               </div>
             </div>
             
@@ -251,5 +252,3 @@ export default function PrintAdvicePage() {
     </div>
   );
 }
-
-    
