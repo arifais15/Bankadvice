@@ -190,55 +190,65 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
   };
 
 
-  const onSubmit = (data: AdviceFormValues) => {
+  const onSubmit = async (data: AdviceFormValues) => {
     if (!firestore) return;
     setIsSubmitting(true);
-    
-    if (isEditMode && adviceToEdit) {
-      const adviceRef = doc(firestore, 'advices', adviceToEdit.id);
-      const updatedData = { ...adviceToEdit, ...data, totalAmount };
-      setDoc(adviceRef, updatedData, { merge: true }).catch((serverError) => {
+
+    let adviceRef;
+    let dataToSave;
+    const operation: 'create' | 'update' = isEditMode ? 'update' : 'create';
+
+    try {
+      if (isEditMode && adviceToEdit) {
+        adviceRef = doc(firestore, 'advices', adviceToEdit.id);
+        dataToSave = { ...adviceToEdit, ...data, totalAmount };
+        await setDoc(adviceRef, dataToSave, { merge: true });
+
+        toast({
+          title: 'Advice Updated',
+          description: `Advice ${dataToSave.adviceNumber} has been saved.`,
+        });
+        router.push('/advices');
+      } else {
+        const adviceCollectionRef = collection(firestore, 'advices');
+        adviceRef = doc(adviceCollectionRef);
+        dataToSave = {
+          ...data,
+          id: adviceRef.id,
+          adviceNumber: generateAdviceNumber(),
+          date: new Date().toISOString(),
+          status: 'Draft' as const,
+          totalAmount: totalAmount,
+        };
+        await setDoc(adviceRef, dataToSave);
+
+        toast({
+          title: 'Advice Created',
+          description: `Advice ${dataToSave.adviceNumber} has been created as a draft.`,
+        });
+        router.push('/advices');
+      }
+    } catch (error: any) {
+      console.error(`Error ${operation}ing advice:`, error);
+      if (error.code === 'permission-denied' && adviceRef && dataToSave) {
         const permissionError = new FirestorePermissionError({
           path: adviceRef.path,
-          operation: 'update',
-          requestResourceData: updatedData,
+          operation: operation,
+          requestResourceData: dataToSave,
         });
         errorEmitter.emit('permission-error', permissionError);
-      });
-      
-      toast({
-        title: 'Advice Updated',
-        description: `Advice ${updatedData.adviceNumber} has been saved.`,
-      });
-      router.push('/advices');
-
-    } else {
-      const adviceCollection = collection(firestore, 'advices');
-      const newAdviceRef = doc(adviceCollection);
-      const newAdvice = {
-        ...data,
-        id: newAdviceRef.id,
-        adviceNumber: generateAdviceNumber(),
-        date: new Date().toISOString(),
-        status: 'Draft' as const,
-        totalAmount: totalAmount,
-      };
-      setDoc(newAdviceRef, newAdvice).catch((serverError) => {
-        const permissionError = new FirestorePermissionError({
-          path: newAdviceRef.path,
-          operation: 'create',
-          requestResourceData: newAdvice,
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'Could not save the advice. Please check the console for details.',
         });
-        errorEmitter.emit('permission-error', permissionError);
-      });
-
-      toast({
-        title: 'Advice Created',
-        description: `Advice ${newAdvice.adviceNumber} has been created as a draft.`,
-      });
-      router.push('/advices');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
 
   return (
     <Form {...form}>

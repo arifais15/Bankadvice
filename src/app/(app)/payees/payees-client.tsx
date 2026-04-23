@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -139,26 +140,40 @@ export function PayeesClient() {
     });
   };
 
-  const onSubmit = (formData: EmployeeFormValues) => {
+  const onSubmit = async (formData: EmployeeFormValues) => {
     if (!firestore) return;
     setIsSubmitting(true);
-    
-    const employeeRef = doc(firestore, 'employees', formData.id);
 
-    setDoc(employeeRef, formData)
-      .catch((serverError) => {
+    const employeeRef = doc(firestore, 'employees', formData.id);
+    const operation = editingEmployee ? 'update' : 'create';
+
+    try {
+      await setDoc(employeeRef, formData);
+
+      toast({
+        title: editingEmployee ? 'Employee Updated' : 'Employee Added',
+        description: `${formData.name}'s details have been saved.`,
+      });
+      setIsFormOpen(false);
+    } catch (error: any) {
+      console.error(`Error ${operation}ing employee:`, error);
+      if (error.code === 'permission-denied') {
         const permissionError = new FirestorePermissionError({
-            path: employeeRef.path,
-            operation: editingEmployee ? 'update' : 'create',
-            requestResourceData: formData,
+          path: employeeRef.path,
+          operation: operation,
+          requestResourceData: formData,
         });
         errorEmitter.emit('permission-error', permissionError);
-        // Revert optimistic updates or show error toast if needed
-      });
-      
-    toast({ title: editingEmployee ? "Employee Updated" : "Employee Added", description: `${formData.name}'s details have been saved.` });
-    setIsFormOpen(false);
-    setIsSubmitting(false);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'Could not save employee details. Please check the console for details.',
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
