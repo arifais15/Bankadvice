@@ -10,7 +10,7 @@ import { formatCurrency, amountToWords } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { BankAdvice } from '@/types';
 import { Loader2, Printer, FileDown, ArrowLeft } from 'lucide-react';
-import { advices } from '@/lib/data';
+import { getAdvices } from '@/lib/storage';
 import { usePrintSettings } from '@/hooks/use-print-settings';
 import { Button } from '@/components/ui/button';
 import * as XLSX from 'xlsx';
@@ -26,7 +26,8 @@ export default function PrintAdvicePage() {
   const [isLoadingAdvice, setIsLoadingAdvice] = useState(true);
 
   useEffect(() => {
-    const foundAdvice = advices.find((a) => a.id === params.id);
+    const allAdvices = getAdvices();
+    const foundAdvice = allAdvices.find((a) => a.id === params.id);
     if (foundAdvice) {
       setAdvice(foundAdvice);
     }
@@ -131,7 +132,7 @@ export default function PrintAdvicePage() {
             </Button>
         </div>
         <div 
-          className="relative p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs shadow-none print:text-xs mb-8"
+          className="relative p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs shadow-none print:text-xs print:shadow-none mb-8"
         >
           {watermarkEnabled && watermarkUrl && (
             <Image

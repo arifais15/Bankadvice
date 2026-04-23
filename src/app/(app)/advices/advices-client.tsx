@@ -24,15 +24,14 @@ import {
 import { MoreHorizontal, Printer, Eye, Edit, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { BankAdvice } from '@/types';
-import { advices as initialAdvices } from '@/lib/data';
+import { getAdvices } from '@/lib/storage';
 
 export function AdvicesClient() {
-  const [advices, setAdvices] = React.useState<BankAdvice[]>(initialAdvices);
+  const [advices, setAdvices] = React.useState<BankAdvice[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
-    // In a real app, you might fetch this data, but here we use the mock data.
-    setAdvices(initialAdvices);
+    setAdvices(getAdvices());
     setIsLoading(false);
   }, []);
 

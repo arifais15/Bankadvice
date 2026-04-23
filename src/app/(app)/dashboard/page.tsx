@@ -6,19 +6,19 @@ import { formatCurrency } from '@/lib/utils';
 import { FileText, Users, Banknote } from 'lucide-react';
 import type { BankAdvice, Employee } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { advices as initialAdvices, employees as initialEmployees } from '@/lib/data';
+import { getAdvices, getEmployees } from '@/lib/storage';
 
 
 export default function DashboardPage() {
-  const [advices, setAdvices] = React.useState<BankAdvice[]>(initialAdvices);
-  const [employees, setEmployees] = React.useState<Employee[]>(initialEmployees);
+  const [advices, setAdvices] = React.useState<BankAdvice[]>([]);
+  const [employees, setEmployees] = React.useState<Employee[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
     // Simulate loading
     setTimeout(() => {
-      setAdvices(initialAdvices);
-      setEmployees(initialEmployees);
+      setAdvices(getAdvices());
+      setEmployees(getEmployees());
       setIsLoading(false);
     }, 500);
   }, []);

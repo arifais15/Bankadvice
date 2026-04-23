@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import * as XLSX from 'xlsx';
 import type { Employee } from '@/types';
-import { employees as initialEmployees } from '@/lib/data';
+import { getEmployees, saveEmployees } from '@/lib/storage';
 
 import {
   Table,
@@ -74,13 +74,13 @@ export function PayeesClient() {
   const [isBulkUploadOpen, setIsBulkUploadOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [editingEmployee, setEditingEmployee] = React.useState<Employee | null>(null);
-  const [employees, setEmployees] = React.useState<Employee[]>(initialEmployees);
+  const [employees, setEmployees] = React.useState<Employee[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
   const { toast } = useToast();
 
   React.useEffect(() => {
-    // Simulate loading data
+    setEmployees(getEmployees());
     setIsLoading(false);
   }, []);
 
@@ -118,28 +118,32 @@ export function PayeesClient() {
   };
 
   const handleDeleteEmployee = (employeeId: string) => {
-    setEmployees(prev => prev.filter(e => e.id !== employeeId));
+    const updatedEmployees = employees.filter(e => e.id !== employeeId);
+    setEmployees(updatedEmployees);
+    saveEmployees(updatedEmployees);
     toast({ title: "Employee Deleted", description: "The employee has been removed from the registry." });
   };
 
   const onSubmit = async (formData: EmployeeFormValues) => {
     setIsSubmitting(true);
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
 
+    let updatedEmployees;
     if (editingEmployee) {
-      setEmployees(prev => prev.map(e => e.id === formData.id ? formData : e));
+      updatedEmployees = employees.map(e => e.id === formData.id ? formData : e)
       toast({
         title: 'Employee Updated',
         description: `${formData.name}'s details have been saved.`,
       });
     } else {
-      setEmployees(prev => [...prev, formData]);
+      updatedEmployees = [...employees, formData];
       toast({
         title: 'Employee Added',
         description: `${formData.name}'s details have been saved.`,
       });
     }
+    setEmployees(updatedEmployees);
+    saveEmployees(updatedEmployees);
     
     setIsSubmitting(false);
     setIsFormOpen(false);
@@ -206,7 +210,9 @@ export function PayeesClient() {
         });
         
         if (newEmployees.length > 0) {
-            setEmployees(prev => [...prev, ...newEmployees]);
+            const updatedEmployees = [...employees, ...newEmployees];
+            setEmployees(updatedEmployees);
+            saveEmployees(updatedEmployees);
             if (validationErrors.length > 0) {
                 toast({
                     title: 'Upload Partially Successful',

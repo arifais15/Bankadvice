@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import type { BankAdvice } from '@/types';
-import { advices } from '@/lib/data';
+import { getAdvices } from '@/lib/storage';
 
 export default function AdviceDetailsPage() {
   const params = useParams();
@@ -36,7 +36,8 @@ export default function AdviceDetailsPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   
   React.useEffect(() => {
-    const foundAdvice = advices.find((a) => a.id === params.id);
+    const allAdvices = getAdvices();
+    const foundAdvice = allAdvices.find((a) => a.id === params.id);
     if (foundAdvice) {
       setAdvice(foundAdvice);
     }

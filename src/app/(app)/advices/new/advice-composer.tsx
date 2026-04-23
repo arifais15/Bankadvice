@@ -24,7 +24,8 @@ import {
 import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
 import type { Employee, BankAdvice } from '@/types';
-import { advices, employees as allEmployeesData, defaultSubjects } from '@/lib/data';
+import { defaultSubjects } from '@/lib/data';
+import { getAdvices, saveAdvices, getEmployees } from '@/lib/storage';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -84,17 +85,16 @@ type AdviceFormValues = z.infer<typeof adviceFormSchema>;
 
 type AdviceComposerProps = {
   adviceToEdit?: BankAdvice | null;
-  allEmployees: Employee[];
 };
 
-export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComposerProps) {
+export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const isEditMode = !!adviceToEdit;
 
-  // State for the employee selection combobox
+  const [allEmployees, setAllEmployees] = React.useState<Employee[]>([]);
   const [open, setOpen] = React.useState(false);
   const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | null>(null);
   const [netPayment, setNetPayment] = React.useState('');
@@ -105,6 +105,7 @@ export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComp
   const defaultRefNo = `27.12.3330.537.03.043.${new Date().getFullYear().toString().slice(-2)}`;
 
   React.useEffect(() => {
+    setAllEmployees(getEmployees());
     try {
       const customSubjects = localStorage.getItem('customSubjects');
       if (customSubjects) {
@@ -222,31 +223,37 @@ export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComp
         ...data,
         date: data.date.toISOString(),
       };
+      
+      const allAdvices = getAdvices();
 
       if (isEditMode && adviceToEdit) {
-        const adviceIndex = advices.findIndex(a => a.id === adviceToEdit.id);
+        const adviceIndex = allAdvices.findIndex(a => a.id === adviceToEdit.id);
         if (adviceIndex !== -1) {
-          advices[adviceIndex] = { ...advices[adviceIndex], ...advicePayload, totalAmount };
+          allAdvices[adviceIndex] = { ...allAdvices[adviceIndex], ...advicePayload, totalAmount };
+          saveAdvices(allAdvices);
+          toast({
+            title: 'Advice Updated',
+            description: `Advice ${allAdvices[adviceIndex].adviceNumber} has been saved.`,
+          });
         }
-        toast({
-          title: 'Advice Updated',
-          description: `Advice ${advices[adviceIndex].adviceNumber} has been saved.`,
-        });
       } else {
+        const allIds = allAdvices.map(a => parseInt(a.id, 10)).filter(id => !isNaN(id));
+        const newId = (allIds.length > 0 ? Math.max(...allIds) : 0) + 1;
         const newAdvice: BankAdvice = {
           ...advicePayload,
-          id: (advices.length + 1).toString(),
+          id: newId.toString(),
           adviceNumber: generateAdviceNumber(),
           status: 'Draft' as const,
           totalAmount: totalAmount,
         };
-        advices.push(newAdvice);
+        saveAdvices([...allAdvices, newAdvice]);
         toast({
           title: 'Advice Created',
           description: `Advice ${newAdvice.adviceNumber} has been created as a draft.`,
         });
       }
       router.push('/advices');
+      router.refresh();
     } catch (error) {
       console.error("Failed to save advice:", error);
       toast({
