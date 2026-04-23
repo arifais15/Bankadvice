@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useParams, notFound } from 'next/navigation';
-import { Printer, Loader2 } from 'lucide-react';
+import { Printer, Loader2, ArrowLeft } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -61,12 +61,20 @@ export default function AdviceDetailsPage() {
           advice.date
         ).toLocaleDateString()}`}
       >
-        <Button asChild variant="outline">
-          <Link href={`/advices/${advice.id}/print`}>
-            <Printer className="mr-2 h-4 w-4" />
-            Print
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+            <Button asChild variant="outline">
+              <Link href="/advices">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href={`/advices/${advice.id}/print`}>
+                <Printer className="mr-2 h-4 w-4" />
+                Print
+              </Link>
+            </Button>
+        </div>
       </PageHeader>
 
       <Card>
