@@ -1,12 +1,14 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { formatCurrency, amountToWords } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { BankAdvice } from '@/types';
-import { Loader2, Printer, FileDown } from 'lucide-react';
+import { Loader2, Printer, FileDown, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { advices } from '@/lib/data';
 import { usePrintSettings } from '@/hooks/use-print-settings';
@@ -114,6 +116,12 @@ export default function PrintAdvicePage() {
   return (
     <div className="bg-muted/30">
         <div className="p-4 max-w-5xl mx-auto flex justify-end gap-2 no-print">
+            <Button asChild variant="outline">
+              <Link href={`/advices/${advice.id}`}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Link>
+            </Button>
             <Button variant="outline" onClick={handleExportExcel}>
                 <FileDown className="mr-2 h-4 w-4" />
                 Export to Excel
@@ -243,3 +251,5 @@ export default function PrintAdvicePage() {
     </div>
   );
 }
+
+    
