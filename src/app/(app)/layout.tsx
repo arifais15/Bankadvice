@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { MainNav } from '@/components/main-nav';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export default function AppLayout({
   children,
@@ -21,13 +22,7 @@ export default function AppLayout({
   const pathname = usePathname();
   const isPrintView = pathname.includes('/print');
 
-  // If it's a print view, render children directly without the app shell.
-  // The root layout (src/app/layout.tsx) will still apply.
-  if (isPrintView) {
-    return <>{children}</>;
-  }
-
-  return (
+  const appShell = (
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
@@ -44,5 +39,11 @@ export default function AppLayout({
         <main className="flex-1 p-4 sm:p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
+  );
+
+  return (
+    <FirebaseClientProvider>
+      {isPrintView ? children : appShell}
+    </FirebaseClientProvider>
   );
 }
