@@ -77,13 +77,13 @@ export default function PrintAdvicePage() {
             {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogoPlaceholder?.imageHint} className="object-contain" />}
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-bold whitespace-nowrap">{headerSettings.headerLine1}</h1>
+            <h1 className="text-2xl font-bold whitespace-nowrap font-nikosh">{headerSettings.headerLine1}</h1>
             <h2 className="text-xl">{headerSettings.headerLine2}</h2>
           </div>
           <div className="text-right">
              {finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={70} height={70} data-ai-hint={companySealPlaceholder?.imageHint} className="ml-auto opacity-70 object-contain" />}
-            <p className="text-xs">{headerSettings.headerLine3}</p>
-            <p className="text-xs">{headerSettings.headerLine4}</p>
+            <p className="text-xs font-nikosh">{headerSettings.headerLine3}</p>
+            <p className="text-xs font-nikosh">{headerSettings.headerLine4}</p>
           </div>
         </header>
 
@@ -149,7 +149,7 @@ export default function PrintAdvicePage() {
 
           <div className="mt-2 flex justify-between items-center text-xs">
               <p className="font-bold">Total : {advice.employees.length}</p>
-              <p className="font-bold">Inword : {amountToWords(advice.totalAmount)}</p>
+              <p className="font-bold">In Words : {amountToWords(advice.totalAmount)}</p>
               <p className="font-bold">GrandTotal {formatCurrency(advice.totalAmount)}</p>
           </div>
         </main>

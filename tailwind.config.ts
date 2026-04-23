@@ -20,6 +20,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
+        serif: ["Times New Roman", "serif"],
+        nikosh: ["Nikosh", "Times New Roman", "serif"],
       },
       colors: {
         background: 'hsl(var(--background))',
