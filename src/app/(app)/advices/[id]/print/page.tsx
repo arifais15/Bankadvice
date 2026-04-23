@@ -6,10 +6,12 @@ import Image from 'next/image';
 import { formatCurrency, amountToWords } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { BankAdvice } from '@/types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Printer, FileDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { advices } from '@/lib/data';
 import { usePrintSettings } from '@/hooks/use-print-settings';
+import { Button } from '@/components/ui/button';
+import * as XLSX from 'xlsx';
 
 
 export default function PrintAdvicePage() {
@@ -28,15 +30,61 @@ export default function PrintAdvicePage() {
     }
     setIsLoadingAdvice(false);
   }, [params.id]);
-  
-  useEffect(() => {
-    if (advice && !isLoadingSettings) {
-        // Automatically trigger print dialog when component mounts
-        setTimeout(() => {
-          window.print();
-        }, 500);
-    }
-  }, [advice, isLoadingSettings]);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleExportExcel = () => {
+    if (!advice) return;
+
+    const header = [
+      "SL",
+      "ID",
+      "Name",
+      "Designation",
+      "Bank_Name",
+      "Branch_Name",
+      "AccountNumber",
+      "Routing",
+      "NetPay"
+    ];
+
+    const dataForExcel = advice.employees.map((item, index) => ([
+      index + 1,
+      item.employee.id,
+      item.employee.name,
+      item.employee.designation,
+      item.employee.bankName,
+      item.employee.branch,
+      item.employee.accountNumber,
+      item.employee.routing,
+      item.netPayment,
+    ]));
+
+    const totalRow = [
+      'Total :',
+      advice.employees.length,
+      'In Words :',
+      amountToWords(advice.totalAmount),
+      '',
+      '',
+      '',
+      'GrandTotal',
+      advice.totalAmount
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet([header, ...dataForExcel, [], totalRow]);
+    
+    // Set column widths
+    const cols = [{ wch: 5 }, { wch: 10 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }];
+    worksheet['!cols'] = cols;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Advice Details');
+    
+    XLSX.writeFile(workbook, `${advice.adviceNumber}.xlsx`);
+  };
 
   if (isLoadingAdvice || isLoadingSettings) {
     return (
@@ -64,116 +112,128 @@ export default function PrintAdvicePage() {
 
 
   return (
-    <div 
-      className={cn(
-        "p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs print:text-xs",
-        watermarkEnabled && "watermark"
-      )}
-      style={watermarkUrl ? { '--watermark-url': `url("${watermarkUrl}")` } as React.CSSProperties : {}}
-    >
-      <div className="relative z-10">
-         <header className="grid grid-cols-3 items-center pb-4 font-sans">
-          <div className="flex items-center">
-            {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogoPlaceholder?.imageHint} className="object-contain" />}
-          </div>
-          <div className="text-center">
-            <h1 className="text-2xl font-bold whitespace-nowrap font-nikosh">{headerSettings.headerLine1}</h1>
-            <h2 className="text-xl">{headerSettings.headerLine2}</h2>
-          </div>
-          <div className="text-right">
-             {finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={70} height={70} data-ai-hint={companySealPlaceholder?.imageHint} className="ml-auto opacity-70 object-contain" />}
-            <p className="text-xs font-nikosh">{headerSettings.headerLine3}</p>
-            <p className="text-xs font-nikosh">{headerSettings.headerLine4}</p>
-          </div>
-        </header>
-
-        <div className="flex justify-between mt-4">
-          <div>
-            <p>Ref.No: {advice.refNo}</p>
-          </div>
-          <div className="text-right">
-            <p>Date: {new Date(advice.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-          </div>
+    <div className="bg-muted/30">
+        <div className="p-4 max-w-5xl mx-auto flex justify-end gap-2 no-print">
+            <Button variant="outline" onClick={handleExportExcel}>
+                <FileDown className="mr-2 h-4 w-4" />
+                Export to Excel
+            </Button>
+            <Button onClick={handlePrint}>
+                <Printer className="mr-2 h-4 w-4" />
+                Print
+            </Button>
         </div>
-        
-         <div className="flex justify-end mt-1">
-            <p className="font-bold">Advice No: {advice.adviceNumber}</p>
-        </div>
+        <div 
+          className={cn(
+            "p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs print:text-xs print:shadow-none shadow-lg mb-8",
+            watermarkEnabled && "watermark"
+          )}
+          style={watermarkUrl ? { '--watermark-url': `url("${watermarkUrl}")` } as React.CSSProperties : {}}
+        >
+          <div className="relative z-10">
+             <header className="grid grid-cols-3 items-center pb-4 font-sans">
+              <div className="flex items-center">
+                {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogoPlaceholder?.imageHint} className="object-contain" />}
+              </div>
+              <div className="text-center">
+                <h1 className="text-2xl font-bold whitespace-nowrap font-nikosh">{headerSettings.headerLine1}</h1>
+                <h2 className="text-xl">{headerSettings.headerLine2}</h2>
+              </div>
+              <div className="text-right">
+                 {finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={70} height={70} data-ai-hint={companySealPlaceholder?.imageHint} className="ml-auto opacity-70 object-contain" />}
+                <p className="text-xs font-nikosh">{headerSettings.headerLine3}</p>
+                <p className="text-xs font-nikosh">{headerSettings.headerLine4}</p>
+              </div>
+            </header>
 
-
-        <main className="mt-8">
-          <div className="space-y-1">
-              <p>Manager</p>
-              <p>{advice.bankName}, {advice.bankBranch}</p>
-          </div>
-          
-          <p className="mt-4"><span className="font-bold">Subject: {advice.subject}</span></p>
-
-          <p className="mt-4 leading-relaxed">
-            You are requested to debit our Account No. {advice.debitAccount} by an amount of {formatCurrency(advice.totalAmount)}
-            ( {amountToWords(advice.totalAmount)} ). The amount is to be transferred via BEFTN to employees' personal savings accounts as per the advice.
-          </p>
-          
-          <div className="mt-4">
-            <table className="w-full text-xs border-collapse border border-black">
-              <thead className="text-left bg-gray-100">
-                <tr className="border-b border-black">
-                  <th className="p-1 border-r border-black font-semibold text-center">SL</th>
-                  <th className="p-1 border-r border-black font-semibold">ID</th>
-                  <th className="p-1 border-r border-black font-semibold">Name</th>
-                  <th className="p-1 border-r border-black font-semibold">Designation</th>
-                  <th className="p-1 border-r border-black font-semibold">Bank_Name</th>
-                  <th className="p-1 border-r border-black font-semibold">Branch_Name</th>
-                  <th className="p-1 border-r border-black font-semibold">AccountNumber</th>
-                  <th className="p-1 border-r border-black font-semibold">Routing</th>
-                  <th className="p-1 text-right font-semibold">NetPay</th>
-                </tr>
-              </thead>
-              <tbody>
-                {advice.employees.map((item, index) => (
-                  <tr key={item.employee.id} className="border-b border-black">
-                    <td className="p-1 border-r border-black text-center">{index + 1}</td>
-                    <td className="p-1 border-r border-black font-mono">{item.employee.id}</td>
-                    <td className="p-1 border-r border-black">{item.employee.name}</td>
-                    <td className="p-1 border-r border-black">{item.employee.designation}</td>
-                    <td className="p-1 border-r border-black">{item.employee.bankName}</td>
-                    <td className="p-1 border-r border-black">{item.employee.branch}</td>
-                    <td className="p-1 border-r border-black font-mono">{item.employee.accountNumber}</td>
-                    <td className="p-1 border-r border-black font-mono">{item.employee.routing}</td>
-                    <td className="p-1 text-right font-mono">{new Intl.NumberFormat('en-IN').format(item.netPayment)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-2 flex justify-between items-center text-xs">
-              <p className="font-bold">Total : {advice.employees.length}</p>
-              <p className="font-bold">In Words : {amountToWords(advice.totalAmount)}</p>
-              <p className="font-bold">GrandTotal {formatCurrency(advice.totalAmount)}</p>
-          </div>
-        </main>
-
-        <footer className="mt-24 grid grid-cols-2 gap-16 text-center text-sm">
-            <div>
-                <div className="border-t border-black w-48 mx-auto pt-2">
-                  AGM Finance
-                  <br/>
-                  Gazipur Palli Bidyut Samity-2
-                </div>
+            <div className="flex justify-between mt-4">
+              <div>
+                <p>Ref.No: {advice.refNo}</p>
+              </div>
+              <div className="text-right">
+                <p>Date: {new Date(advice.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+              </div>
             </div>
-            <div>
-                <div className="border-t border-black w-48 mx-auto pt-2">
-                  Senior General Manager
-                  <br/>
-                  Gazipur Palli Bidyut Samity-2
-                </div>
+            
+             <div className="flex justify-end mt-1">
+                <p className="font-bold">Advice No: {advice.adviceNumber}</p>
             </div>
-        </footer>
-        <div className="text-center mt-12 text-xs text-gray-500 no-print">
-          <p>BankAdviceFlow - A computer-generated document.</p>
+
+
+            <main className="mt-8">
+              <div className="space-y-1">
+                  <p>Manager</p>
+                  <p>{advice.bankName}, {advice.bankBranch}</p>
+              </div>
+              
+              <p className="mt-4"><span className="font-bold">Subject: {advice.subject}</span></p>
+
+              <p className="mt-4 leading-relaxed">
+                You are requested to debit our Account No. {advice.debitAccount} by an amount of {formatCurrency(advice.totalAmount)}
+                ( {amountToWords(advice.totalAmount)} ). The amount is to be transferred via BEFTN to employees' personal savings accounts as per the advice.
+              </p>
+              
+              <div className="mt-4">
+                <table className="w-full text-xs border-collapse border border-black">
+                  <thead className="text-left bg-gray-100">
+                    <tr className="border-b border-black">
+                      <th className="p-1 border-r border-black font-semibold text-center">SL</th>
+                      <th className="p-1 border-r border-black font-semibold">ID</th>
+                      <th className="p-1 border-r border-black font-semibold">Name</th>
+                      <th className="p-1 border-r border-black font-semibold">Designation</th>
+                      <th className="p-1 border-r border-black font-semibold">Bank_Name</th>
+                      <th className="p-1 border-r border-black font-semibold">Branch_Name</th>
+                      <th className="p-1 border-r border-black font-semibold">AccountNumber</th>
+                      <th className="p-1 border-r border-black font-semibold">Routing</th>
+                      <th className="p-1 text-right font-semibold">NetPay</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {advice.employees.map((item, index) => (
+                      <tr key={item.employee.id} className="border-b border-black">
+                        <td className="p-1 border-r border-black text-center">{index + 1}</td>
+                        <td className="p-1 border-r border-black font-mono">{item.employee.id}</td>
+                        <td className="p-1 border-r border-black">{item.employee.name}</td>
+                        <td className="p-1 border-r border-black">{item.employee.designation}</td>
+                        <td className="p-1 border-r border-black">{item.employee.bankName}</td>
+                        <td className="p-1 border-r border-black">{item.employee.branch}</td>
+                        <td className="p-1 border-r border-black font-mono">{item.employee.accountNumber}</td>
+                        <td className="p-1 border-r border-black font-mono">{item.employee.routing}</td>
+                        <td className="p-1 text-right font-mono">{new Intl.NumberFormat('en-IN').format(item.netPayment)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-2 flex justify-between items-center text-xs">
+                  <p className="font-bold">Total : {advice.employees.length}</p>
+                  <p className="font-bold">In Words : {amountToWords(advice.totalAmount)}</p>
+                  <p className="font-bold">GrandTotal {formatCurrency(advice.totalAmount)}</p>
+              </div>
+            </main>
+
+            <footer className="mt-24 grid grid-cols-2 gap-16 text-center text-sm">
+                <div>
+                    <div className="border-t border-black w-48 mx-auto pt-2">
+                      AGM Finance
+                      <br/>
+                      Gazipur Palli Bidyut Samity-2
+                    </div>
+                </div>
+                <div>
+                    <div className="border-t border-black w-48 mx-auto pt-2">
+                      Senior General Manager
+                      <br/>
+                      Gazipur Palli Bidyut Samity-2
+                    </div>
+                </div>
+            </footer>
+            <div className="text-center mt-12 text-xs text-gray-500 no-print">
+              <p>BankAdviceFlow - A computer-generated document.</p>
+            </div>
+          </div>
         </div>
-      </div>
     </div>
   );
 }
