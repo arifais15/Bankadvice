@@ -10,7 +10,6 @@ import { formatCurrency, amountToWords } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { BankAdvice } from '@/types';
 import { Loader2, Printer, FileDown, ArrowLeft } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { advices } from '@/lib/data';
 import { usePrintSettings } from '@/hooks/use-print-settings';
 import { Button } from '@/components/ui/button';
@@ -79,7 +78,6 @@ export default function PrintAdvicePage() {
 
     const worksheet = XLSX.utils.aoa_to_sheet([header, ...dataForExcel, [], totalRow]);
     
-    // Set column widths
     const cols = [{ wch: 5 }, { wch: 10 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }];
     worksheet['!cols'] = cols;
 
@@ -141,7 +139,7 @@ export default function PrintAdvicePage() {
               alt="Watermark"
               fill
               sizes="100vw"
-              className="absolute inset-0 object-contain object-center opacity-10 pointer-events-none z-0"
+              className="absolute inset-0 object-contain object-center opacity-15 pointer-events-none z-0"
               style={{
                 transform: 'rotate(-30deg) scale(0.8)',
               }}
