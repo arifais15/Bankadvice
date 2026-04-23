@@ -124,13 +124,22 @@ export default function PrintAdvicePage() {
             </Button>
         </div>
         <div 
-          className={cn(
-            "p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs print:text-xs print:shadow-none mb-8",
-            watermarkEnabled && "watermark"
-          )}
-          style={watermarkUrl ? { '--watermark-url': `url("${watermarkUrl}")` } as React.CSSProperties : {}}
+          className="relative p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs print:text-xs print:shadow-none mb-8"
         >
-          <div className="relative">
+          {watermarkEnabled && watermarkUrl && (
+            <Image
+              src={watermarkUrl}
+              alt="Watermark"
+              fill
+              sizes="100vw"
+              className="absolute inset-0 object-contain object-center opacity-10 pointer-events-none z-0"
+              style={{
+                transform: 'rotate(-30deg) scale(0.8)',
+              }}
+            />
+          )}
+
+          <div className="relative z-10">
              <header className="grid grid-cols-3 items-center pb-4 font-sans border-b-2 border-black">
               <div className="flex items-center">
                 {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogoPlaceholder?.imageHint} className="object-contain" />}
