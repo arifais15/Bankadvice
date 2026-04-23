@@ -238,9 +238,6 @@ export default function PrintAdvicePage() {
                     </div>
                 </div>
             </footer>
-            <div className="text-center mt-12 text-xs text-gray-500 no-print">
-              <p>BankAdviceFlow - A computer-generated document.</p>
-            </div>
           </div>
         </div>
     </div>
