@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -6,10 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { doc, collection, setDoc, addDoc } from 'firebase/firestore';
-import { useFirestore, useCollection } from '@/firebase';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import {
   ChevronsUpDown,
   Check,
@@ -26,6 +21,7 @@ import {
 import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
 import type { Employee, BankAdvice } from '@/types';
+import { advices, employees as allEmployeesData } from '@/lib/data';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -83,21 +79,15 @@ type AdviceFormValues = z.infer<typeof adviceFormSchema>;
 
 type AdviceComposerProps = {
   adviceToEdit?: BankAdvice | null;
+  allEmployees: Employee[];
 };
 
-export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
+export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComposerProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const isEditMode = !!adviceToEdit;
-
-  const employeesCollection = React.useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'employees');
-  }, [firestore]);
-  const { data: allEmployees, isLoading: areEmployeesLoading } = useCollection<Employee>(employeesCollection);
 
   // State for the employee selection combobox
   const [open, setOpen] = React.useState(false);
@@ -107,16 +97,20 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
 
   const form = useForm<AdviceFormValues>({
     resolver: zodResolver(adviceFormSchema),
-    defaultValues: {
-      refNo: adviceToEdit?.refNo ?? '27.12.3330.537.03.043.26',
-      subject: adviceToEdit?.subject ?? '',
-      debitAccount: adviceToEdit?.debitAccount ?? 'CD-0200017857835',
-      bankName: adviceToEdit?.bankName ?? 'Agrani Bank PLC',
-      bankBranch: adviceToEdit?.bankBranch ?? 'Rajabari Bazar Branch',
-      purpose: adviceToEdit?.purpose ?? '',
-      context: adviceToEdit?.context ?? '',
-      narrative: adviceToEdit?.narrative ?? '',
-      employees: adviceToEdit?.employees ?? [],
+    defaultValues: adviceToEdit ? {
+        ...adviceToEdit,
+        purpose: adviceToEdit.purpose || '',
+        context: adviceToEdit.context || '',
+    } : {
+      refNo: '27.12.3330.537.03.043.26',
+      subject: '',
+      debitAccount: 'CD-0200017857835',
+      bankName: 'Agrani Bank PLC',
+      bankBranch: 'Rajabari Bazar Branch',
+      purpose: '',
+      context: '',
+      narrative: '',
+      employees: [],
     },
   });
 
@@ -191,59 +185,45 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
 
 
   const onSubmit = async (data: AdviceFormValues) => {
-    if (!firestore) return;
     setIsSubmitting(true);
 
-    let adviceRef;
-    let dataToSave;
-    const operation: 'create' | 'update' = isEditMode ? 'update' : 'create';
+    // Simulate async operation
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     try {
       if (isEditMode && adviceToEdit) {
-        adviceRef = doc(firestore, 'advices', adviceToEdit.id);
-        dataToSave = { ...adviceToEdit, ...data, totalAmount };
-        await setDoc(adviceRef, dataToSave, { merge: true });
-
+        const adviceIndex = advices.findIndex(a => a.id === adviceToEdit.id);
+        if (adviceIndex !== -1) {
+          advices[adviceIndex] = { ...advices[adviceIndex], ...data, totalAmount };
+        }
         toast({
           title: 'Advice Updated',
-          description: `Advice ${dataToSave.adviceNumber} has been saved.`,
+          description: `Advice ${advices[adviceIndex].adviceNumber} has been saved.`,
         });
-        router.push('/advices');
       } else {
-        const adviceCollectionRef = collection(firestore, 'advices');
-        adviceRef = doc(adviceCollectionRef);
-        dataToSave = {
+        const newAdvice: BankAdvice = {
           ...data,
-          id: adviceRef.id,
+          id: (advices.length + 1).toString(),
           adviceNumber: generateAdviceNumber(),
           date: new Date().toISOString(),
           status: 'Draft' as const,
           totalAmount: totalAmount,
         };
-        await setDoc(adviceRef, dataToSave);
-
+        advices.push(newAdvice);
         toast({
           title: 'Advice Created',
-          description: `Advice ${dataToSave.adviceNumber} has been created as a draft.`,
-        });
-        router.push('/advices');
-      }
-    } catch (error: any) {
-      console.error(`Error ${operation}ing advice:`, error);
-      if (error.code === 'permission-denied' && adviceRef && dataToSave) {
-        const permissionError = new FirestorePermissionError({
-          path: adviceRef.path,
-          operation: operation,
-          requestResourceData: dataToSave,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Uh oh! Something went wrong.',
-          description: 'Could not save the advice. Please check the console for details.',
+          description: `Advice ${newAdvice.adviceNumber} has been created as a draft.`,
         });
       }
+      router.push('/advices');
+      router.refresh(); // To reflect changes in the advice list
+    } catch (error) {
+      console.error("Failed to save advice:", error);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "Could not save the advice.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -451,7 +431,6 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                           role="combobox"
                           aria-expanded={open}
                           className="w-full justify-between font-normal"
-                          disabled={areEmployeesLoading}
                         >
                           {selectedEmployee
                             ? allEmployees?.find((p) => p.id === selectedEmployee.id)?.name

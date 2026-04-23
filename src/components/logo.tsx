@@ -1,24 +1,28 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Landmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { doc } from 'firebase/firestore';
-import { useFirestore, useDoc } from '@/firebase';
 import type { PrintSettings } from '@/types';
 
 export function Logo({ className }: { className?: string }) {
   const fallbackLogo = PlaceHolderImages.find(p => p.id === 'company-logo');
-  const firestore = useFirestore();
+  const [settings, setSettings] = useState<PrintSettings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const settingsRef = React.useMemo(() => {
-    if (!firestore) return null;
-    return doc(firestore, 'settings', 'print');
-  }, [firestore]);
-
-  const { data: settings, isLoading } = useDoc<PrintSettings>(settingsRef);
+  useEffect(() => {
+    try {
+      const storedSettings = localStorage.getItem('printSettings');
+      if (storedSettings) {
+        setSettings(JSON.parse(storedSettings));
+      }
+    } catch (error) {
+      console.error("Could not parse print settings from localStorage", error);
+    }
+    setIsLoading(false);
+  }, []);
   
   const finalLogoUrl = settings?.companyLogoUrl || fallbackLogo?.imageUrl;
   

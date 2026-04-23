@@ -3,8 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { useParams, notFound } from 'next/navigation';
-import { doc } from 'firebase/firestore';
-import { useFirestore, useDoc } from '@/firebase';
 import { Printer, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { PageHeader } from '@/components/page-header';
@@ -28,17 +26,20 @@ import {
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import type { BankAdvice } from '@/types';
+import { advices } from '@/lib/data';
 
 export default function AdviceDetailsPage() {
   const params = useParams();
-  const firestore = useFirestore();
-
-  const adviceRef = React.useMemo(() => {
-      if (!firestore || !params.id) return null;
-      return doc(firestore, 'advices', params.id as string)
-  }, [firestore, params.id]);
-
-  const { data: advice, isLoading } = useDoc<BankAdvice>(adviceRef);
+  const [advice, setAdvice] = React.useState<BankAdvice | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  
+  React.useEffect(() => {
+    const foundAdvice = advices.find((a) => a.id === params.id);
+    if (foundAdvice) {
+      setAdvice(foundAdvice);
+    }
+    setIsLoading(false);
+  }, [params.id]);
 
   if (isLoading) {
     return (

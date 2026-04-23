@@ -1,23 +1,27 @@
 'use client';
 import React from 'react';
-import { collection } from 'firebase/firestore';
-import { useFirestore, useCollection } from '@/firebase';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 import { FileText, Users, Banknote } from 'lucide-react';
 import type { BankAdvice, Employee } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { advices as initialAdvices, employees as initialEmployees } from '@/lib/data';
 
 
 export default function DashboardPage() {
-  const firestore = useFirestore();
-  
-  const advicesCollection = React.useMemo(() => firestore ? collection(firestore, 'advices') : null, [firestore]);
-  const { data: advices, isLoading: advicesLoading } = useCollection<BankAdvice>(advicesCollection);
+  const [advices, setAdvices] = React.useState<BankAdvice[]>(initialAdvices);
+  const [employees, setEmployees] = React.useState<Employee[]>(initialEmployees);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const employeesCollection = React.useMemo(() => firestore ? collection(firestore, 'employees') : null, [firestore]);
-  const { data: employees, isLoading: employeesLoading } = useCollection<Employee>(employeesCollection);
+  React.useEffect(() => {
+    // Simulate loading
+    setTimeout(() => {
+      setAdvices(initialAdvices);
+      setEmployees(initialEmployees);
+      setIsLoading(false);
+    }, 500);
+  }, []);
 
   const stats = React.useMemo(() => {
     const totalAdvices = advices?.length || 0;
@@ -28,8 +32,6 @@ export default function DashboardPage() {
     
     return { totalAdvices, totalEmployees, totalAmountIssued };
   }, [advices, employees]);
-  
-  const isLoading = advicesLoading || employeesLoading;
 
   return (
     <div className="flex flex-col gap-8">

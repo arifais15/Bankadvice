@@ -1,34 +1,42 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { doc } from 'firebase/firestore';
-import { useFirestore, useDoc } from '@/firebase';
 import { formatCurrency, amountToWords } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { BankAdvice, PrintSettings } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { advices } from '@/lib/data';
 
 
 export default function PrintAdvicePage() {
   const params = useParams();
-  const firestore = useFirestore();
   const companyLogoPlaceholder = PlaceHolderImages.find(p => p.id === 'company-logo');
   const companySealPlaceholder = PlaceHolderImages.find(p => p.id === 'company-seal');
 
-  const adviceRef = React.useMemo(() => {
-      if (!firestore || !params.id) return null;
-      return doc(firestore, 'advices', params.id as string)
-  }, [firestore, params.id]);
-  const { data: advice, isLoading: isAdviceLoading } = useDoc<BankAdvice>(adviceRef);
+  const [advice, setAdvice] = useState<BankAdvice | null>(null);
+  const [settings, setSettings] = useState<PrintSettings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const settingsRef = React.useMemo(() => {
-    if (!firestore) return null;
-    return doc(firestore, 'settings', 'print');
-  }, [firestore]);
-  const { data: settings, isLoading: areSettingsLoading } = useDoc<PrintSettings>(settingsRef);
+  useEffect(() => {
+    const foundAdvice = advices.find((a) => a.id === params.id);
+    if (foundAdvice) {
+      setAdvice(foundAdvice);
+    }
+    
+    try {
+      const storedSettings = localStorage.getItem('printSettings');
+      if (storedSettings) {
+        setSettings(JSON.parse(storedSettings));
+      }
+    } catch (error) {
+      console.error("Could not parse print settings from localStorage", error);
+    }
+
+    setIsLoading(false);
+  }, [params.id]);
   
   useEffect(() => {
     if (advice) {
@@ -38,8 +46,6 @@ export default function PrintAdvicePage() {
         }, 500);
     }
   }, [advice]);
-
-  const isLoading = isAdviceLoading || areSettingsLoading;
 
   if (isLoading || !advice) {
     return (

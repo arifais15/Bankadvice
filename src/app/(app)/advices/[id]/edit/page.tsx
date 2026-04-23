@@ -2,29 +2,24 @@
 
 import React from 'react';
 import { useParams, notFound } from 'next/navigation';
-import { doc, collection } from 'firebase/firestore';
-import { useFirestore, useDoc, useCollection } from '@/firebase';
+import { advices, employees } from '@/lib/data';
 import { AdviceComposer } from '@/app/(app)/advices/new/advice-composer';
-import type { BankAdvice, Employee } from '@/types';
+import type { Employee } from '@/types';
 import { Loader2 } from 'lucide-react';
 
 export default function EditAdvicePage() {
   const params = useParams();
-  const firestore = useFirestore();
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [advice, setAdvice] = React.useState(null);
 
-  const adviceRef = React.useMemo(() => {
-    if (!firestore || !params.id) return null;
-    return doc(firestore, 'advices', params.id as string)
-  }, [firestore, params.id]);
-  const { data: advice, isLoading: isAdviceLoading } = useDoc<BankAdvice>(adviceRef);
-  
-  const employeesCollection = React.useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'employees');
-  }, [firestore]);
-  const { data: employees, isLoading: areEmployeesLoading } = useCollection<Employee>(employeesCollection);
+  React.useEffect(() => {
+    const adviceToEdit = advices.find((a) => a.id === params.id);
+    if (adviceToEdit) {
+      setAdvice(adviceToEdit);
+    }
+    setIsLoading(false);
+  }, [params.id]);
 
-  const isLoading = isAdviceLoading || areEmployeesLoading;
 
   if (isLoading) {
     return (

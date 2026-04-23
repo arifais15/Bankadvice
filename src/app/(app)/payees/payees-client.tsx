@@ -1,15 +1,11 @@
-
 'use client';
 
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { collection, doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { useFirestore, useCollection } from '@/firebase';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import type { Employee } from '@/types';
+import { employees as initialEmployees } from '@/lib/data';
 
 import {
   Table,
@@ -75,16 +71,15 @@ export function PayeesClient() {
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [editingEmployee, setEditingEmployee] = React.useState<Employee | null>(null);
+  const [employees, setEmployees] = React.useState<Employee[]>(initialEmployees);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   const { toast } = useToast();
-  const firestore = useFirestore();
 
-  const employeesCollection = React.useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'employees');
-  }, [firestore]);
-
-  const { data: employees, isLoading } = useCollection<Employee>(employeesCollection);
+  React.useEffect(() => {
+    // Simulate loading data
+    setIsLoading(false);
+  }, []);
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
@@ -127,53 +122,31 @@ export function PayeesClient() {
   };
 
   const handleDeleteEmployee = (employeeId: string) => {
-    if (!firestore) return;
-    const employeeRef = doc(firestore, 'employees', employeeId);
-    deleteDoc(employeeRef).then(() => {
-      toast({ title: "Employee Deleted", description: "The employee has been removed from the registry." });
-    }).catch((serverError) => {
-      const permissionError = new FirestorePermissionError({
-          path: employeeRef.path,
-          operation: 'delete',
-      });
-      errorEmitter.emit('permission-error', permissionError);
-    });
+    setEmployees(prev => prev.filter(e => e.id !== employeeId));
+    toast({ title: "Employee Deleted", description: "The employee has been removed from the registry." });
   };
 
   const onSubmit = async (formData: EmployeeFormValues) => {
-    if (!firestore) return;
     setIsSubmitting(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    const employeeRef = doc(firestore, 'employees', formData.id);
-    const operation = editingEmployee ? 'update' : 'create';
-
-    try {
-      await setDoc(employeeRef, formData);
-
+    if (editingEmployee) {
+      setEmployees(prev => prev.map(e => e.id === formData.id ? formData : e));
       toast({
-        title: editingEmployee ? 'Employee Updated' : 'Employee Added',
+        title: 'Employee Updated',
         description: `${formData.name}'s details have been saved.`,
       });
-      setIsFormOpen(false);
-    } catch (error: any) {
-      console.error(`Error ${operation}ing employee:`, error);
-      if (error.code === 'permission-denied') {
-        const permissionError = new FirestorePermissionError({
-          path: employeeRef.path,
-          operation: operation,
-          requestResourceData: formData,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Uh oh! Something went wrong.',
-          description: 'Could not save employee details. Please check the console for details.',
-        });
-      }
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      setEmployees(prev => [...prev, formData]);
+      toast({
+        title: 'Employee Added',
+        description: `${formData.name}'s details have been saved.`,
+      });
     }
+    
+    setIsSubmitting(false);
+    setIsFormOpen(false);
   };
 
   return (

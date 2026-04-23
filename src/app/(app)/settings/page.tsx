@@ -5,10 +5,6 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { doc, setDoc } from 'firebase/firestore';
-import { useFirestore, useDoc } from '@/firebase';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -35,13 +31,7 @@ type SettingsFormValues = z.infer<typeof settingsSchema>;
 export default function SettingsPage() {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = React.useState(false);
-  const firestore = useFirestore();
-
-  const settingsRef = React.useMemo(() => {
-    if (!firestore) return null;
-    return doc(firestore, 'settings', 'print');
-  }, [firestore]);
-  const { data: settings, isLoading } = useDoc<PrintSettings>(settingsRef);
+  const [isLoading, setIsLoading] = React.useState(true);
   
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
@@ -58,13 +48,18 @@ export default function SettingsPage() {
   });
   
   React.useEffect(() => {
-    if (settings) {
-      form.reset(settings);
+    try {
+      const savedSettings = localStorage.getItem('printSettings');
+      if (savedSettings) {
+        form.reset(JSON.parse(savedSettings));
+      }
+    } catch (error) {
+        console.error("Failed to load settings from localStorage:", error);
     }
-  }, [settings, form]);
+    setIsLoading(false);
+  }, [form]);
 
   const onSubmit = (data: SettingsFormValues) => {
-    if (!firestore) return;
     setIsSaving(true);
     
     const dataToSave = {
@@ -72,38 +67,26 @@ export default function SettingsPage() {
         watermarkUrl: data.watermarkEnabled ? data.watermarkUrl : '',
     };
     
-    const settingsDocRef = doc(firestore, 'settings', 'print');
-    
-    setDoc(settingsDocRef, dataToSave, { merge: true })
-      .then(() => {
+    try {
+        localStorage.setItem('printSettings', JSON.stringify(dataToSave));
         toast({
           title: 'Settings Saved',
           description: 'Your print settings have been updated.',
         });
-      })
-      .catch((error) => {
+    } catch (error: any) {
         let message = 'Could not save settings.';
         if (error instanceof DOMException && error.name === 'QuotaExceededError') {
             message = 'An uploaded image is too large. Please use smaller files (e.g., under 1MB).';
-        } else {
-            const permissionError = new FirestorePermissionError({
-                path: settingsDocRef.path,
-                operation: 'update',
-                requestResourceData: dataToSave,
-            });
-            errorEmitter.emit('permission-error', permissionError);
-            message = 'Permission denied. Could not save settings.';
         }
         toast({
           variant: 'destructive',
           title: 'Error Saving Settings',
           description: message,
         });
-        console.error("Failed to save settings:", error);
-      })
-      .finally(() => {
+        console.error("Failed to save settings to localStorage:", error);
+    } finally {
         setIsSaving(false);
-      });
+    }
   };
   
   const createFileInputOnChange = (fieldName: keyof SettingsFormValues) => (e: React.ChangeEvent<HTMLInputElement>) => {

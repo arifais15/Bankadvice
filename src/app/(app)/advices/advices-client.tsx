@@ -2,8 +2,6 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { collection } from 'firebase/firestore';
-import { useFirestore, useCollection } from '@/firebase';
 import {
   Table,
   TableBody,
@@ -24,15 +22,17 @@ import {
 import { MoreHorizontal, Printer, Eye, Edit, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { BankAdvice } from '@/types';
+import { advices as initialAdvices } from '@/lib/data';
 
 export function AdvicesClient() {
-  const firestore = useFirestore();
-  const advicesCollection = React.useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'advices');
-  }, [firestore]);
-  
-  const { data: advices, isLoading } = useCollection<BankAdvice>(advicesCollection);
+  const [advices, setAdvices] = React.useState<BankAdvice[]>(initialAdvices);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    // In a real app, you might fetch this data, but here we use the mock data.
+    setAdvices(initialAdvices);
+    setIsLoading(false);
+  }, []);
 
   const sortedAdvices = React.useMemo(() => {
     if (!advices) return [];
