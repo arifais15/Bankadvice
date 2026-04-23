@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import * as XLSX from 'xlsx';
 import type { Employee } from '@/types';
 import { employees as initialEmployees } from '@/lib/data';
 
@@ -35,13 +36,14 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, Upload, Edit, Trash2, Loader2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Upload, Edit, Trash2, Loader2, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -69,6 +71,7 @@ type EmployeeFormValues = z.infer<typeof employeeSchema>;
 
 export function PayeesClient() {
   const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [editingEmployee, setEditingEmployee] = React.useState<Employee | null>(null);
   const [employees, setEmployees] = React.useState<Employee[]>(initialEmployees);
@@ -113,13 +116,6 @@ export function PayeesClient() {
     }
     setIsFormOpen(true);
   };
-  
-  const handleBulkUpload = () => {
-    toast({
-        title: "Feature not implemented",
-        description: "Bulk employee uploading is planned for a future release.",
-    });
-  };
 
   const handleDeleteEmployee = (employeeId: string) => {
     setEmployees(prev => prev.filter(e => e.id !== employeeId));
@@ -148,11 +144,122 @@ export function PayeesClient() {
     setIsSubmitting(false);
     setIsFormOpen(false);
   };
+  
+  const handleDownloadTemplate = () => {
+    const headers = [['id', 'name', 'designation', 'bankName', 'branch', 'accountNumber', 'routing']];
+    const exampleData = [['0004', 'John Doe', 'Software Engineer', 'Example Bank', 'Main Branch', '1234567890123', '123123123']];
+    const ws = XLSX.utils.aoa_to_sheet([...headers, ...exampleData]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Employees');
+    XLSX.writeFile(wb, 'employee_template.xlsx');
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = event.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        const headers = (json[0] as string[]).map(h => h.toLowerCase());
+        const expectedHeaders = ['id', 'name', 'designation', 'bankName', 'branch', 'accountNumber', 'routing'];
+        
+        if(JSON.stringify(headers) !== JSON.stringify(expectedHeaders)) {
+            toast({ variant: 'destructive', title: 'Invalid Headers', description: 'File headers do not match the template. Please download a new template.' });
+            return;
+        }
+
+        const rows = json.slice(1) as any[][];
+        if (rows.length === 0) {
+            toast({ title: 'Empty File', description: 'The uploaded file has no data rows.' });
+            return;
+        }
+
+        const newEmployees: Employee[] = [];
+        const validationErrors: string[] = [];
+
+        rows.forEach((row, index) => {
+            const rowData: any = {};
+            expectedHeaders.forEach((header, i) => {
+                rowData[header] = row[i] !== undefined ? String(row[i]) : '';
+            });
+
+            const result = employeeSchema.safeParse(rowData);
+
+            if (result.success) {
+                if (employees.some(e => e.id === result.data.id) || newEmployees.some(e => e.id === result.data.id)) {
+                    validationErrors.push(`Row ${index + 2}: Employee ID "${result.data.id}" already exists.`);
+                } else {
+                    newEmployees.push(result.data);
+                }
+            } else {
+                const errors = result.error.errors.map(err => err.message).join(', ');
+                validationErrors.push(`Row ${index + 2}: ${errors}`);
+            }
+        });
+        
+        if (newEmployees.length > 0) {
+            setEmployees(prev => [...prev, ...newEmployees]);
+            if (validationErrors.length > 0) {
+                toast({
+                    title: 'Upload Partially Successful',
+                    description: `${newEmployees.length} employees added. ${validationErrors.length} rows had errors and were skipped.`,
+                });
+            } else {
+                 toast({
+                    title: 'Upload Successful',
+                    description: `${newEmployees.length} new employees have been added.`,
+                });
+            }
+            setIsBulkUploadOpen(false);
+        } else {
+            if (validationErrors.length > 0) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Upload Failed',
+                    description: (
+                        <div className="max-h-40 overflow-y-auto">
+                            <p className="mb-2">No valid new employees found. Please check the errors:</p>
+                            <ul className="list-disc list-inside text-xs">
+                                {validationErrors.map((err, i) => <li key={i}>{err}</li>).slice(0, 5)}
+                                {validationErrors.length > 5 && <li>...and {validationErrors.length - 5} more.</li>}
+                            </ul>
+                        </div>
+                    ),
+                });
+            } else {
+                toast({
+                    title: 'No New Data',
+                    description: 'The file was empty or contained only existing employees.',
+                });
+            }
+        }
+
+      } catch (error) {
+        console.error(error);
+        toast({
+            variant: 'destructive',
+            title: 'Upload Failed',
+            description: 'Could not parse the file. Ensure it is a valid .xlsx file and matches the template.',
+        });
+      } finally {
+        if (e.target) e.target.value = '';
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
 
   return (
     <>
       <div className="flex justify-end gap-2">
-         <Button variant="outline" onClick={handleBulkUpload}>
+         <Button variant="outline" onClick={() => setIsBulkUploadOpen(true)}>
             <Upload className="mr-2 h-4 w-4" /> Bulk Upload
         </Button>
         <Button onClick={() => handleOpenForm(null)}>
@@ -241,6 +348,45 @@ export function PayeesClient() {
           )}
         </CardContent>
       </Card>
+      
+      <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Bulk Upload Employees</DialogTitle>
+            <DialogDescription>
+              Add multiple employees at once by uploading an XLSX file.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+                <Label htmlFor="download-template" className="text-base font-semibold">Step 1: Download Template</Label>
+                <p className="text-sm text-muted-foreground">
+                    Download the template file to ensure your data is in the correct format.
+                </p>
+                 <Button variant="outline" className="w-full" onClick={handleDownloadTemplate} id="download-template">
+                    <Download className="mr-2 h-4 w-4" />
+                    Download .xlsx Template
+                </Button>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="upload-file" className="text-base font-semibold">Step 2: Upload File</Label>
+                <p className="text-sm text-muted-foreground">
+                   Once you've filled out the template, upload the saved XLSX file here.
+                </p>
+                <Input 
+                    id="upload-file"
+                    type="file" 
+                    accept=".xlsx, .xls, .csv"
+                    onChange={handleFileUpload}
+                    className="cursor-pointer file:font-semibold"
+                />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={() => setIsBulkUploadOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[625px]">
