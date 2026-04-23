@@ -111,4 +111,8 @@
   .no-print {
     display: none !important;
   }
+  .watermark::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
