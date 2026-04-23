@@ -132,7 +132,7 @@ export default function PrintAdvicePage() {
             </Button>
         </div>
         <div 
-          className="relative p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs print:text-xs print:shadow-none mb-8"
+          className="relative p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs shadow-none print:text-xs mb-8"
         >
           {watermarkEnabled && watermarkUrl && (
             <Image
