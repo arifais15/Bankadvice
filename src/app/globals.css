@@ -101,7 +101,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    opacity: 0.05;
+    opacity: 0.08;
     z-index: 0;
     transform: rotate(-30deg);
   }
@@ -114,5 +114,6 @@
   .watermark::after {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    opacity: 0.08 !important;
   }
 }

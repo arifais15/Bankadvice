@@ -125,13 +125,13 @@ export default function PrintAdvicePage() {
         </div>
         <div 
           className={cn(
-            "p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs print:text-xs print:shadow-none shadow-lg mb-8",
+            "p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs print:text-xs print:shadow-none mb-8",
             watermarkEnabled && "watermark"
           )}
           style={watermarkUrl ? { '--watermark-url': `url("${watermarkUrl}")` } as React.CSSProperties : {}}
         >
           <div className="relative z-10">
-             <header className="grid grid-cols-3 items-center pb-4 font-sans">
+             <header className="grid grid-cols-3 items-center pb-4 font-sans border-b-2 border-black">
               <div className="flex items-center">
                 {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogoPlaceholder?.imageHint} className="object-contain" />}
               </div>
