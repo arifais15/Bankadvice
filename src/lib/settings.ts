@@ -1,7 +1,7 @@
 import type { PrintSettings } from '@/types';
 
 export const printSettings: PrintSettings = {
-  companyLogoUrl: 'https://picsum.photos/seed/newlogo/100/100',
+  companyLogoUrl: 'https://iili.io/Fin0JtI.jpg',
   companySealUrl: '',
   watermarkEnabled: false,
   watermarkUrl: '',
