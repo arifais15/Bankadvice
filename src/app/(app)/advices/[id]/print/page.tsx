@@ -77,7 +77,7 @@ export default function PrintAdvicePage() {
             {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogoPlaceholder?.imageHint} className="object-contain" />}
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-bold">{headerSettings.headerLine1}</h1>
+            <h1 className="text-2xl font-bold whitespace-nowrap">{headerSettings.headerLine1}</h1>
             <h2 className="text-xl">{headerSettings.headerLine2}</h2>
           </div>
           <div className="text-right">
