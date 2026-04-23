@@ -91,3 +91,11 @@ export const advices: BankAdvice[] = [
     totalAmount: 80000,
   },
 ];
+
+export const defaultSubjects: string[] = [
+  'Monthly Salary',
+  'Festival Bonus',
+  'Vendor Payment',
+  'Expense Reimbursement',
+  'Overtime Payment',
+];

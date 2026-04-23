@@ -21,7 +21,7 @@ import {
 import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
 import type { Employee, BankAdvice } from '@/types';
-import { advices, employees as allEmployeesData } from '@/lib/data';
+import { advices, employees as allEmployeesData, defaultSubjects } from '@/lib/data';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -94,6 +94,20 @@ export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComp
   const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | null>(null);
   const [netPayment, setNetPayment] = React.useState('');
   const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
+  
+  const [subjects, setSubjects] = React.useState<string[]>(defaultSubjects);
+
+  React.useEffect(() => {
+    try {
+      const customSubjects = localStorage.getItem('customSubjects');
+      if (customSubjects) {
+        const parsedSubjects = JSON.parse(customSubjects);
+        setSubjects(prev => [...new Set([...prev, ...parsedSubjects])]);
+      }
+    } catch (error) {
+      console.error("Failed to load custom subjects from localStorage", error);
+    }
+  }, []);
 
   const form = useForm<AdviceFormValues>({
     resolver: zodResolver(adviceFormSchema),
@@ -186,11 +200,15 @@ export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComp
 
   const onSubmit = async (data: AdviceFormValues) => {
     setIsSubmitting(true);
-
-    // Simulate async operation
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
     try {
+      // Save new subject to localStorage
+      if (data.subject && !subjects.includes(data.subject)) {
+        const customSubjects = JSON.parse(localStorage.getItem('customSubjects') || '[]');
+        const newCustomSubjects = [...new Set([...customSubjects, data.subject])];
+        localStorage.setItem('customSubjects', JSON.stringify(newCustomSubjects));
+        setSubjects(prev => [...new Set([...prev, data.subject])]);
+      }
+
       if (isEditMode && adviceToEdit) {
         const adviceIndex = advices.findIndex(a => a.id === adviceToEdit.id);
         if (adviceIndex !== -1) {
@@ -216,7 +234,6 @@ export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComp
         });
       }
       router.push('/advices');
-      router.refresh(); // To reflect changes in the advice list
     } catch (error) {
       console.error("Failed to save advice:", error);
       toast({
@@ -342,8 +359,17 @@ export function AdviceComposer({ adviceToEdit = null, allEmployees }: AdviceComp
                     <FormItem>
                       <FormLabel>Subject</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Monthly Payroll - May 2024" {...field} />
+                        <Input
+                          placeholder="e.g., Monthly Payroll - May 2024"
+                          {...field}
+                          list="subject-suggestions"
+                        />
                       </FormControl>
+                      <datalist id="subject-suggestions">
+                        {subjects.map((subject) => (
+                          <option key={subject} value={subject} />
+                        ))}
+                      </datalist>
                       <FormMessage />
                     </FormItem>
                   )}
