@@ -9,7 +9,7 @@ import type { BankAdvice } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { advices } from '@/lib/data';
-import { printSettings } from '@/lib/settings';
+import { usePrintSettings } from '@/hooks/use-print-settings';
 
 
 export default function PrintAdvicePage() {
@@ -17,27 +17,28 @@ export default function PrintAdvicePage() {
   const companyLogoPlaceholder = PlaceHolderImages.find(p => p.id === 'company-logo');
   const companySealPlaceholder = PlaceHolderImages.find(p => p.id === 'company-seal');
 
+  const { settings, isLoading: isLoadingSettings } = usePrintSettings();
   const [advice, setAdvice] = useState<BankAdvice | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingAdvice, setIsLoadingAdvice] = useState(true);
 
   useEffect(() => {
     const foundAdvice = advices.find((a) => a.id === params.id);
     if (foundAdvice) {
       setAdvice(foundAdvice);
     }
-    setIsLoading(false);
+    setIsLoadingAdvice(false);
   }, [params.id]);
   
   useEffect(() => {
-    if (advice) {
+    if (advice && !isLoadingSettings) {
         // Automatically trigger print dialog when component mounts
         setTimeout(() => {
           window.print();
         }, 500);
     }
-  }, [advice]);
+  }, [advice, isLoadingSettings]);
 
-  if (isLoading || !advice) {
+  if (isLoadingAdvice || isLoadingSettings) {
     return (
         <div className="flex justify-center items-center h-screen">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -49,7 +50,6 @@ export default function PrintAdvicePage() {
     notFound();
   }
   
-  const settings = printSettings;
   const finalLogoUrl = settings?.companyLogoUrl || companyLogoPlaceholder?.imageUrl;
   const finalSealUrl = settings?.companySealUrl || companySealPlaceholder?.imageUrl;
   const watermarkEnabled = settings?.watermarkEnabled || false;
