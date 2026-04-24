@@ -134,7 +134,7 @@ export default function PrintAdvicePage() {
         </div>
         <div 
           className={cn(
-            "relative p-8 max-w-7xl mx-auto font-serif bg-white text-black text-xs shadow-lg mb-8",
+            "relative p-8 max-w-7xl mx-auto font-serif bg-white text-black text-sm shadow-lg mb-8",
             "print:p-0 print:m-0 print:shadow-none print:max-w-none print:mb-0"
           )}
         >
@@ -148,22 +148,22 @@ export default function PrintAdvicePage() {
             />
           )}
           <div className="relative z-10">
-             <header className="grid grid-cols-3 items-center pb-4 font-sans border-b-2 border-black">
-              <div className="flex items-center">
-                {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogoPlaceholder?.imageHint} className="object-contain" />}
-              </div>
-              <div className="text-center">
-                <h1 className="text-2xl font-bold whitespace-nowrap font-nikosh">{headerSettings.headerLine1}</h1>
-                <h2 className="text-xl">{headerSettings.headerLine2}</h2>
-              </div>
-              <div className="text-right">
-                 {sealEnabled && finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={70} height={70} data-ai-hint={companySealPlaceholder?.imageHint} className="ml-auto opacity-70 object-contain" />}
-                <p className="text-xs font-nikosh">{headerSettings.headerLine3}</p>
-                <p className="text-xs font-nikosh">{headerSettings.headerLine4}</p>
-              </div>
+             <header className="grid grid-cols-[1fr_2fr_1fr] items-center gap-4 pb-4 font-sans border-b-2 border-black">
+                <div className="flex items-center justify-start">
+                  {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={80} height={80} data-ai-hint={companyLogoPlaceholder?.imageHint} className="object-contain" />}
+                </div>
+                <div className="text-center">
+                  <h1 className="text-3xl font-bold font-nikosh">{headerSettings.headerLine1}</h1>
+                  <h2 className="text-2xl font-semibold">{headerSettings.headerLine2}</h2>
+                  <p className="text-sm font-nikosh mt-2">{headerSettings.headerLine3}</p>
+                  <p className="text-sm font-nikosh">{headerSettings.headerLine4}</p>
+                </div>
+                <div className="flex items-center justify-end">
+                  {sealEnabled && finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={70} height={70} data-ai-hint={companySealPlaceholder?.imageHint} className="opacity-70 object-contain" />}
+                </div>
             </header>
 
-            <div className="flex justify-between mt-4">
+            <div className="flex justify-between mt-6">
               <div>
                 <p>Ref.No: {advice.refNo}</p>
               </div>
@@ -172,51 +172,51 @@ export default function PrintAdvicePage() {
               </div>
             </div>
             
-             <div className="flex justify-end mt-1">
+             <div className="flex justify-end mt-2">
                 <p className="font-bold">Advice No: {advice.adviceNumber}</p>
             </div>
 
 
             <main className="mt-8">
               <div className="space-y-1">
-                  <p>Manager</p>
+                  <p className='font-medium'>Manager</p>
                   <p>{advice.bankName}, {advice.bankBranch}</p>
               </div>
               
-              <p className="mt-4"><span className="font-bold">Subject: {advice.subject}</span></p>
+              <p className="mt-6 font-bold">Subject: {advice.subject}</p>
 
-              <p className="mt-4 leading-relaxed">
+              <p className="mt-4 leading-relaxed text-justify">
                 You are requested to debit our Account No. {advice.debitAccount} by an amount of {formatCurrency(advice.totalAmount)}
                 ( {amountToWords(advice.totalAmount)} ). The amount is to be transferred via BEFTN to employees' personal savings accounts as per the advice.
               </p>
               
-              <div className="mt-4">
-                <table className="w-full text-xs border-collapse border border-black">
+              <div className="mt-6 text-xs">
+                <table className="w-full border-collapse border border-black">
                   <thead className="text-left bg-gray-100 print:bg-gray-100">
                     <tr className="border-b border-black">
-                      <th className="p-1 border-r border-black font-semibold text-center">SL</th>
-                      <th className="p-1 border-r border-black font-semibold">ID</th>
-                      <th className="p-1 border-r border-black font-semibold">Name</th>
-                      <th className="p-1 border-r border-black font-semibold">Designation</th>
-                      <th className="p-1 border-r border-black font-semibold">Bank_Name</th>
-                      <th className="p-1 border-r border-black font-semibold">Branch_Name</th>
-                      <th className="p-1 border-r border-black font-semibold">AccountNumber</th>
-                      <th className="p-1 border-r border-black font-semibold">Routing</th>
-                      <th className="p-1 text-right font-semibold">NetPay</th>
+                      <th className="p-2 border-r border-black font-semibold text-center">SL</th>
+                      <th className="p-2 border-r border-black font-semibold">ID</th>
+                      <th className="p-2 border-r border-black font-semibold">Name</th>
+                      <th className="p-2 border-r border-black font-semibold">Designation</th>
+                      <th className="p-2 border-r border-black font-semibold">Bank_Name</th>
+                      <th className="p-2 border-r border-black font-semibold">Branch_Name</th>
+                      <th className="p-2 border-r border-black font-semibold">AccountNumber</th>
+                      <th className="p-2 border-r border-black font-semibold">Routing</th>
+                      <th className="p-2 text-right font-semibold">NetPay</th>
                     </tr>
                   </thead>
                   <tbody>
                     {advice.employees.map((item, index) => (
                       <tr key={item.employee.id} className="border-b border-black">
-                        <td className="p-1 border-r border-black text-center">{index + 1}</td>
-                        <td className="p-1 border-r border-black font-mono">{item.employee.id}</td>
-                        <td className="p-1 border-r border-black">{item.employee.name}</td>
-                        <td className="p-1 border-r border-black">{item.employee.designation}</td>
-                        <td className="p-1 border-r border-black">{item.employee.bankName}</td>
-                        <td className="p-1 border-r border-black">{item.employee.branch}</td>
-                        <td className="p-1 border-r border-black font-mono">{item.employee.accountNumber}</td>
-                        <td className="p-1 border-r border-black font-mono">{item.employee.routing}</td>
-                        <td className="p-1 text-right font-mono">{new Intl.NumberFormat('en-IN').format(item.netPayment)}</td>
+                        <td className="p-2 border-r border-black text-center">{index + 1}</td>
+                        <td className="p-2 border-r border-black font-mono">{item.employee.id}</td>
+                        <td className="p-2 border-r border-black">{item.employee.name}</td>
+                        <td className="p-2 border-r border-black">{item.employee.designation}</td>
+                        <td className="p-2 border-r border-black">{item.employee.bankName}</td>
+                        <td className="p-2 border-r border-black">{item.employee.branch}</td>
+                        <td className="p-2 border-r border-black font-mono">{item.employee.accountNumber}</td>
+                        <td className="p-2 border-r border-black font-mono">{item.employee.routing}</td>
+                        <td className="p-2 text-right font-mono">{new Intl.NumberFormat('en-IN').format(item.netPayment)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -230,20 +230,20 @@ export default function PrintAdvicePage() {
               </div>
             </main>
 
-            <footer className="mt-24 grid grid-cols-2 gap-16 text-center text-sm">
+            <footer className="mt-24 grid grid-cols-2 gap-16 text-center text-sm pt-8">
                 <div>
-                    <div className="border-t border-black w-48 mx-auto pt-2">
+                    <p className="border-t-2 border-black inline-block pt-2 px-8">
                       AGM Finance
                       <br/>
                       Gazipur Palli Bidyut Samity-2
-                    </div>
+                    </p>
                 </div>
                 <div>
-                    <div className="border-t border-black w-48 mx-auto pt-2">
+                    <p className="border-t-2 border-black inline-block pt-2 px-8">
                       Senior General Manager
                       <br/>
                       Gazipur Palli Bidyut Samity-2
-                    </div>
+                    </p>
                 </div>
             </footer>
           </div>
