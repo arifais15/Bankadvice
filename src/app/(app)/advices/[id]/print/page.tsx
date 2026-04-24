@@ -116,7 +116,7 @@ export default function PrintAdvicePage() {
 
   return (
     <div className="bg-muted/30 print:bg-white">
-        <div className="p-4 max-w-5xl mx-auto flex justify-end gap-2 no-print">
+        <div className="p-4 max-w-7xl mx-auto flex justify-end gap-2 no-print">
             <Button asChild variant="outline">
               <Link href={`/advices/${advice.id}`}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -134,7 +134,8 @@ export default function PrintAdvicePage() {
         </div>
         <div 
           className={cn(
-            "relative p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs print:text-xs print:shadow-none print:p-0 print:m-0 print:max-w-none mb-8"
+            "relative p-8 max-w-7xl mx-auto font-serif bg-white text-black text-xs shadow-lg mb-8",
+            "print:p-0 print:m-0 print:shadow-none print:max-w-none print:mb-0"
           )}
         >
           {watermarkEnabled && watermarkUrl && (
@@ -143,6 +144,7 @@ export default function PrintAdvicePage() {
               alt="Watermark"
               fill
               className="object-contain opacity-10 transform -rotate-30 scale-75 z-0"
+              unoptimized
             />
           )}
           <div className="relative z-10">
