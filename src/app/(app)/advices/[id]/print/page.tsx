@@ -14,6 +14,7 @@ import { getAdvices } from '@/lib/storage';
 import { usePrintSettings } from '@/hooks/use-print-settings';
 import { Button } from '@/components/ui/button';
 import * as XLSX from 'xlsx';
+import { cn } from '@/lib/utils';
 
 
 export default function PrintAdvicePage() {
@@ -133,21 +134,12 @@ export default function PrintAdvicePage() {
             </Button>
         </div>
         <div 
-          className="relative p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs shadow-none print:text-xs print:shadow-none mb-8"
-        >
-          {watermarkEnabled && watermarkUrl && (
-            <Image
-              src={watermarkUrl}
-              alt="Watermark"
-              fill
-              sizes="100vw"
-              className="absolute inset-0 object-contain object-center opacity-15 pointer-events-none z-0"
-              style={{
-                transform: 'rotate(-30deg) scale(0.8)',
-              }}
-            />
+          className={cn(
+            "p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs print:text-xs print:shadow-none mb-8",
+            watermarkEnabled && "watermark"
           )}
-
+          style={watermarkEnabled && watermarkUrl ? { '--watermark-url': `url("${watermarkUrl}")` } as React.CSSProperties : {}}
+        >
           <div className="relative z-10">
              <header className="grid grid-cols-3 items-center pb-4 font-sans border-b-2 border-black">
               <div className="flex items-center">
