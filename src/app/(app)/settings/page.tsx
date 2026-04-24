@@ -132,24 +132,43 @@ export default function SettingsPage() {
                 </FormItem>
               )}
             />
-             <FormField
-              control={form.control}
-              name="companySealUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company Seal URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://example.com/seal.png" {...field} />
-                  </FormControl>
-                  <FormDescription>Used on printed documents.</FormDescription>
-                  {watchedValues.companySealUrl && (
-                    <div className="mt-4 relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
-                      <Image src={watchedValues.companySealUrl} alt="Seal Preview" fill style={{ objectFit: 'contain' }} />
-                    </div>
+            <div className="space-y-4">
+               <FormField
+                control={form.control}
+                name="companySealEnabled"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Enable Company Seal</FormLabel>
+                        <FormDescription>Display the company seal on printed documents.</FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                  </FormItem>
+                )}
+              />
+              {watchedValues.companySealEnabled && (
+                <FormField
+                  control={form.control}
+                  name="companySealUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company Seal URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://example.com/seal.png" {...field} />
+                      </FormControl>
+                      <FormDescription>Used on printed documents.</FormDescription>
+                      {watchedValues.companySealUrl && (
+                        <div className="mt-4 relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
+                          <Image src={watchedValues.companySealUrl} alt="Seal Preview" fill style={{ objectFit: 'contain' }} />
+                        </div>
+                      )}
+                    </FormItem>
                   )}
-                </FormItem>
+                />
               )}
-            />
+            </div>
           </CardContent>
         </Card>
 

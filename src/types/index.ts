@@ -33,6 +33,7 @@ export type BankAdvice = {
 export type PrintSettings = {
   companyLogoUrl?: string;
   companySealUrl?: string;
+  companySealEnabled?: boolean;
   watermarkEnabled?: boolean;
   watermarkUrl?: string;
   headerLine1?: string;

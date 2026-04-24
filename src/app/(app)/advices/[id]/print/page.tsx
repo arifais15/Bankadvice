@@ -102,6 +102,7 @@ export default function PrintAdvicePage() {
   
   const finalLogoUrl = settings?.companyLogoUrl || companyLogoPlaceholder?.imageUrl;
   const finalSealUrl = settings?.companySealUrl || companySealPlaceholder?.imageUrl;
+  const sealEnabled = settings?.companySealEnabled;
   const watermarkEnabled = settings?.watermarkEnabled || false;
   const watermarkUrl = settings?.watermarkUrl || settings?.companyLogoUrl || companyLogoPlaceholder?.imageUrl;
   
@@ -157,7 +158,7 @@ export default function PrintAdvicePage() {
                 <h2 className="text-xl">{headerSettings.headerLine2}</h2>
               </div>
               <div className="text-right">
-                 {finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={70} height={70} data-ai-hint={companySealPlaceholder?.imageHint} className="ml-auto opacity-70 object-contain" />}
+                 {sealEnabled && finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={70} height={70} data-ai-hint={companySealPlaceholder?.imageHint} className="ml-auto opacity-70 object-contain" />}
                 <p className="text-xs font-nikosh">{headerSettings.headerLine3}</p>
                 <p className="text-xs font-nikosh">{headerSettings.headerLine4}</p>
               </div>

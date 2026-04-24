@@ -3,6 +3,7 @@ import type { PrintSettings } from '@/types';
 export const printSettings: PrintSettings = {
   companyLogoUrl: 'https://iili.io/Fin0JtI.jpg',
   companySealUrl: '',
+  companySealEnabled: true,
   watermarkEnabled: false,
   watermarkUrl: '',
   headerLine1: 'গাজীপুর পল্লী বিদ্যুৎ সমিতি-২',
