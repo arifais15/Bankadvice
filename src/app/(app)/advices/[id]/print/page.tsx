@@ -191,18 +191,18 @@ export default function PrintAdvicePage() {
               </p>
               
               <div className="mt-6 text-xs">
-                <table className="w-full border-collapse border border-black">
+                <table className="w-full border-collapse border border-black table-fixed">
                   <thead className="text-left bg-gray-100 print:bg-gray-100">
                     <tr className="border-b border-black">
-                      <th className="p-2 border-r border-black font-semibold text-center">SL</th>
-                      <th className="p-2 border-r border-black font-semibold">ID</th>
-                      <th className="p-2 border-r border-black font-semibold">Name</th>
-                      <th className="p-2 border-r border-black font-semibold">Designation</th>
-                      <th className="p-2 border-r border-black font-semibold">Bank_Name</th>
-                      <th className="p-2 border-r border-black font-semibold">Branch_Name</th>
-                      <th className="p-2 border-r border-black font-semibold">AccountNumber</th>
-                      <th className="p-2 border-r border-black font-semibold">Routing</th>
-                      <th className="p-2 text-right font-semibold">NetPay</th>
+                      <th className="p-2 border-r border-black font-semibold text-center" style={{width: '4%'}}>SL</th>
+                      <th className="p-2 border-r border-black font-semibold" style={{width: '7%'}}>ID</th>
+                      <th className="p-2 border-r border-black font-semibold" style={{width: '20%'}}>Name</th>
+                      <th className="p-2 border-r border-black font-semibold" style={{width: '14%'}}>Designation</th>
+                      <th className="p-2 border-r border-black font-semibold" style={{width: '11%'}}>Bank_Name</th>
+                      <th className="p-2 border-r border-black font-semibold" style={{width: '11%'}}>Branch_Name</th>
+                      <th className="p-2 border-r border-black font-semibold" style={{width: '13%'}}>AccountNumber</th>
+                      <th className="p-2 border-r border-black font-semibold" style={{width: '8%'}}>Routing</th>
+                      <th className="p-2 text-right font-semibold" style={{width: '12%'}}>NetPay</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -220,13 +220,14 @@ export default function PrintAdvicePage() {
                       </tr>
                     ))}
                   </tbody>
+                  <tfoot className="border-t-2 border-black text-xs font-bold">
+                    <tr>
+                        <td className="p-2" colSpan={2}>Total : {advice.employees.length}</td>
+                        <td className="p-2" colSpan={5}>In Words : {amountToWords(advice.totalAmount)}</td>
+                        <td className="p-2 text-right" colSpan={2}>GrandTotal {formatCurrency(advice.totalAmount)}</td>
+                    </tr>
+                   </tfoot>
                 </table>
-              </div>
-
-              <div className="mt-2 flex justify-between items-center text-xs">
-                  <p className="font-bold">Total : {advice.employees.length}</p>
-                  <p className="font-bold">In Words : {amountToWords(advice.totalAmount)}</p>
-                  <p className="font-bold">GrandTotal {formatCurrency(advice.totalAmount)}</p>
               </div>
             </main>
 
