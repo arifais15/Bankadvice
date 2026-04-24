@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -116,7 +115,7 @@ export default function PrintAdvicePage() {
 
 
   return (
-    <div className="bg-muted/30">
+    <div className="bg-muted/30 print:bg-white">
         <div className="p-4 max-w-5xl mx-auto flex justify-end gap-2 no-print">
             <Button asChild variant="outline">
               <Link href={`/advices/${advice.id}`}>
@@ -135,11 +134,17 @@ export default function PrintAdvicePage() {
         </div>
         <div 
           className={cn(
-            "p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs print:text-xs print:shadow-none mb-8",
-            watermarkEnabled && "watermark"
+            "relative p-8 max-w-5xl mx-auto font-serif bg-white text-black text-xs print:text-xs print:shadow-none print:p-0 print:m-0 print:max-w-none mb-8"
           )}
-          style={watermarkEnabled && watermarkUrl ? { '--watermark-url': `url("${watermarkUrl}")` } as React.CSSProperties : {}}
         >
+          {watermarkEnabled && watermarkUrl && (
+            <Image
+              src={watermarkUrl}
+              alt="Watermark"
+              fill
+              className="object-contain opacity-10 transform -rotate-30 scale-75 z-0"
+            />
+          )}
           <div className="relative z-10">
              <header className="grid grid-cols-3 items-center pb-4 font-sans border-b-2 border-black">
               <div className="flex items-center">
@@ -185,7 +190,7 @@ export default function PrintAdvicePage() {
               
               <div className="mt-4">
                 <table className="w-full text-xs border-collapse border border-black">
-                  <thead className="text-left bg-gray-100">
+                  <thead className="text-left bg-gray-100 print:bg-gray-100">
                     <tr className="border-b border-black">
                       <th className="p-1 border-r border-black font-semibold text-center">SL</th>
                       <th className="p-1 border-r border-black font-semibold">ID</th>
