@@ -50,10 +50,11 @@ export default function PrintAdvicePage() {
     try {
       const element = adviceContentRef.current;
       const canvas = await html2canvas(element, {
-        scale: 3, // High DPI for sharpness
+        scale: 4, // Ultra high resolution
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
+        allowTaint: true,
       });
       
       const imgData = canvas.toDataURL('image/png', 1.0);
@@ -134,6 +135,15 @@ export default function PrintAdvicePage() {
 
   const contactLines = headerSettings.headerLine4.split(',').map(l => l.trim()).filter(Boolean);
 
+  // Common cell style for 16pt rows with centered text
+  const cellStyle: React.CSSProperties = {
+    height: '16pt',
+    lineHeight: '16pt',
+    verticalAlign: 'middle',
+    padding: 0,
+    color: '#000000',
+  };
+
   return (
     <div className="bg-muted/30 print:bg-white min-h-screen">
         <div className="p-4 max-w-7xl mx-auto flex justify-end gap-2 no-print">
@@ -198,7 +208,7 @@ export default function PrintAdvicePage() {
                 </div>
             </header>
 
-            <div className="flex justify-between items-baseline mt-3 text-[13px]">
+            <div className="flex justify-between items-baseline mt-3 text-[14px]">
               <div className="flex items-center gap-1">
                 <span className="font-bold">Ref.No:</span> <span className="text-black">{advice.refNo}</span>
               </div>
@@ -208,79 +218,79 @@ export default function PrintAdvicePage() {
             </div>
 
             <main className="mt-2">
-              <div className="flex justify-between items-end border-b border-gray-200 pb-0.5">
-                <div className="text-[13px]">
+              <div className="flex justify-between items-start border-b border-gray-200 pb-0.5">
+                <div className="text-[14px]">
                     <p className='font-bold text-black'>Manager</p>
                     <p className="text-black">{advice.bankName}, {advice.bankBranch}</p>
                 </div>
                 <div className="text-right">
-                    <p className="font-bold text-[13px] text-black">Advice No: {advice.adviceNumber}</p>
+                    <p className="font-bold text-[14px] text-black">Advice No: {advice.adviceNumber}</p>
                 </div>
               </div>
               
-              <p className="mt-4 font-bold text-[13px] underline text-black">Subject: {advice.subject}</p>
+              <p className="mt-4 font-bold text-[14px] underline text-black">Subject: {advice.subject}</p>
 
-              <p className="mt-3 leading-tight text-justify text-[13px] text-black">
+              <p className="mt-3 leading-tight text-justify text-[14px] text-black">
                 You are requested to debit our Account No. <span className="font-bold">{advice.debitAccount}</span> by an amount of <span className="font-bold">{formatCurrency(advice.totalAmount)}</span>
                 ( <span className="font-bold">{amountToWords(advice.totalAmount)}</span> ). The amount is to be transferred via BEFTN to employees' personal savings accounts as per the list provided below.
               </p>
               
               <div className="mt-4">
-                <table className="w-full border-collapse border border-black table-fixed text-[12px]">
+                <table className="w-full border-collapse border border-black table-fixed text-[12px] leading-none">
                   <thead className="bg-gray-50">
-                    <tr className="border-b border-black h-[16pt]">
-                      <th className="p-0 border-r border-black font-bold text-center align-middle text-black h-[16pt]" style={{width: '4%'}}>SL</th>
-                      <th className="p-0 border-r border-black font-bold align-middle pl-1 text-black h-[16pt]" style={{width: '8%'}}>ID</th>
-                      <th className="p-0 border-r border-black font-bold align-middle pl-1 text-black h-[16pt]" style={{width: '24%'}}>Employee Name</th>
-                      <th className="p-0 border-r border-black font-bold align-middle pl-1 text-black h-[16pt]" style={{width: '16%'}}>Designation</th>
-                      <th className="p-0 border-r border-black font-bold align-middle pl-1 text-black h-[16pt]" style={{width: '12%'}}>Bank Name</th>
-                      <th className="p-0 border-r border-black font-bold align-middle pl-1 text-black h-[16pt]" style={{width: '12%'}}>Branch Name</th>
-                      <th className="p-0 border-r border-black font-bold align-middle pl-1 text-black h-[16pt]" style={{width: '12%'}}>A/C Number</th>
-                      <th className="p-0 border-r border-black font-bold align-middle text-center text-black h-[16pt]" style={{width: '6%'}}>Routing</th>
-                      <th className="p-0 text-right font-bold align-middle pr-1 text-black h-[16pt]" style={{width: '10%'}}>Amount</th>
+                    <tr className="border-b border-black">
+                      <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '4%' }}>SL</th>
+                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '8%' }}>ID</th>
+                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '24%' }}>Employee Name</th>
+                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '16%' }}>Designation</th>
+                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '12%' }}>Bank Name</th>
+                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '12%' }}>Branch Name</th>
+                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '12%' }}>A/C Number</th>
+                      <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '6%' }}>Routing</th>
+                      <th className="text-right font-bold pr-1" style={{ ...cellStyle, width: '10%' }}>Amount</th>
                     </tr>
                   </thead>
                   <tbody className="text-black">
                     {advice.employees.map((item, index) => (
-                      <tr key={item.employee.id} className="border-b border-black h-[16pt]">
-                        <td className="p-0 border-r border-black text-center align-middle h-[16pt]">{index + 1}</td>
-                        <td className="p-0 border-r border-black font-mono align-middle pl-1 h-[16pt]">{item.employee.id}</td>
-                        <td className="p-0 border-r border-black font-medium align-middle pl-1 h-[16pt]">{item.employee.name}</td>
-                        <td className="p-0 border-r border-black align-middle pl-1 h-[16pt]">{item.employee.designation}</td>
-                        <td className="p-0 border-r border-black align-middle pl-1 h-[16pt]">{item.employee.bankName}</td>
-                        <td className="p-0 border-r border-black align-middle pl-1 h-[16pt]">{item.employee.branch}</td>
-                        <td className="p-0 border-r border-black font-mono align-middle pl-1 h-[16pt]">{item.employee.accountNumber}</td>
-                        <td className="p-0 border-r border-black font-mono align-middle text-center h-[16pt]">{item.employee.routing}</td>
-                        <td className="p-0 text-right font-mono font-bold align-middle pr-1 h-[16pt]">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(item.netPayment)}</td>
+                      <tr key={item.employee.id} className="border-b border-black">
+                        <td className="border-r border-black text-center" style={cellStyle}>{index + 1}</td>
+                        <td className="border-r border-black font-mono text-left pl-1" style={cellStyle}>{item.employee.id}</td>
+                        <td className="border-r border-black font-medium text-left pl-1" style={cellStyle}>{item.employee.name}</td>
+                        <td className="border-r border-black text-left pl-1" style={cellStyle}>{item.employee.designation}</td>
+                        <td className="border-r border-black text-left pl-1" style={cellStyle}>{item.employee.bankName}</td>
+                        <td className="border-r border-black text-left pl-1" style={cellStyle}>{item.employee.branch}</td>
+                        <td className="border-r border-black font-mono text-left pl-1" style={cellStyle}>{item.employee.accountNumber}</td>
+                        <td className="border-r border-black font-mono text-center" style={cellStyle}>{item.employee.routing}</td>
+                        <td className="text-right font-mono font-bold pr-1" style={cellStyle}>{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(item.netPayment)}</td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot className="border-t border-black font-bold text-black">
-                    <tr className="h-[18pt]">
-                        <td className="p-0.5 border-r border-black text-center align-middle" colSpan={2}>TOTAL</td>
-                        <td className="p-0.5 border-r border-black align-middle pl-2" colSpan={6}>
+                    <tr style={{ height: '20pt', lineHeight: '20pt', verticalAlign: 'middle' }}>
+                        <td className="border-r border-black text-center" colSpan={2} style={{ color: '#000000' }}>TOTAL</td>
+                        <td className="border-r border-black text-left pl-2" colSpan={6} style={{ color: '#000000' }}>
                           <span className="mr-2">Count: {advice.employees.length}</span>
                           <span className="mx-2 font-normal">|</span>
                           <span className="ml-2">In Words: {amountToWords(advice.totalAmount)}</span>
                         </td>
-                        <td className="p-0.5 text-right font-mono text-[13px] align-middle pr-1">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
+                        <td className="text-right font-mono text-[14px] pr-1" style={{ color: '#000000' }}>{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
                     </tr>
                    </tfoot>
                 </table>
               </div>
             </main>
 
-            <footer className="mt-28 grid grid-cols-2 gap-40 text-center text-[13px] pb-12">
+            <footer className="mt-28 grid grid-cols-2 gap-40 text-center text-[14px] pb-12">
                 <div className="flex flex-col items-center">
                     <div className="border-t border-black w-full pt-1">
                       <p className="font-bold text-black">AGM Finance</p>
-                      <p className="text-[12px] text-black">Gazipur Palli Bidyut Samity-2</p>
+                      <p className="text-[13px] text-black">Gazipur Palli Bidyut Samity-2</p>
                     </div>
                 </div>
                 <div className="flex flex-col items-center">
                     <div className="border-t border-black w-full pt-1">
                       <p className="font-bold text-black">Senior General Manager</p>
-                      <p className="text-[12px] text-black">Gazipur Palli Bidyut Samity-2</p>
+                      <p className="text-[13px] text-black">Gazipur Palli Bidyut Samity-2</p>
                     </div>
                 </div>
             </footer>
