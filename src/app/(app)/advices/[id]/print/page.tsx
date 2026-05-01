@@ -50,7 +50,7 @@ export default function PrintAdvicePage() {
     try {
       const element = adviceContentRef.current;
       const canvas = await html2canvas(element, {
-        scale: 3, // High DPI
+        scale: 3, // High DPI for sharpness
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
@@ -183,22 +183,22 @@ export default function PrintAdvicePage() {
           <div className="relative z-10">
              <header className="grid grid-cols-3 items-start pb-2 font-sans border-b border-black">
                 <div className="flex flex-col items-start">
-                  {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={85} height={85} unoptimized className="object-contain" />}
+                  {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={90} height={90} unoptimized className="object-contain" />}
                 </div>
                 <div className="text-center">
-                  <h1 className="text-2xl font-bold font-nikosh leading-tight text-black">{headerSettings.headerLine1}</h1>
-                  <h2 className="text-xl font-bold leading-tight text-black">{headerSettings.headerLine2}</h2>
+                  <h1 className="text-[26px] font-bold font-nikosh leading-tight text-black">{headerSettings.headerLine1}</h1>
+                  <h2 className="text-[22px] font-bold leading-tight text-black">{headerSettings.headerLine2}</h2>
                 </div>
                 <div className="text-right flex flex-col items-end gap-0.5">
-                  {sealEnabled && finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={65} height={65} unoptimized className="opacity-80 object-contain mb-1" />}
-                  <p className="text-[12px] font-nikosh leading-tight font-bold text-black">{headerSettings.headerLine3}</p>
+                  {sealEnabled && finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={70} height={70} unoptimized className="opacity-80 object-contain mb-1" />}
+                  <p className="text-[13px] font-nikosh leading-tight font-bold text-black">{headerSettings.headerLine3}</p>
                   {contactLines.map((line, i) => (
-                    <p key={i} className="text-[11px] font-nikosh leading-tight text-black">{line}</p>
+                    <p key={i} className="text-[12px] font-nikosh leading-tight text-black">{line}</p>
                   ))}
                 </div>
             </header>
 
-            <div className="flex justify-between items-baseline mt-3 text-[12px]">
+            <div className="flex justify-between items-baseline mt-3 text-[13px]">
               <div className="flex items-center gap-1">
                 <span className="font-bold">Ref.No:</span> <span className="text-black">{advice.refNo}</span>
               </div>
@@ -209,49 +209,49 @@ export default function PrintAdvicePage() {
 
             <main className="mt-2">
               <div className="flex justify-between items-end border-b border-gray-200 pb-0.5">
-                <div className="text-[12px]">
+                <div className="text-[13px]">
                     <p className='font-bold text-black'>Manager</p>
                     <p className="text-black">{advice.bankName}, {advice.bankBranch}</p>
                 </div>
                 <div className="text-right">
-                    <p className="font-bold text-[12px] text-black">Advice No: {advice.adviceNumber}</p>
+                    <p className="font-bold text-[13px] text-black">Advice No: {advice.adviceNumber}</p>
                 </div>
               </div>
               
-              <p className="mt-4 font-bold text-[12px] underline text-black">Subject: {advice.subject}</p>
+              <p className="mt-4 font-bold text-[13px] underline text-black">Subject: {advice.subject}</p>
 
-              <p className="mt-3 leading-tight text-justify text-[12px] text-black">
+              <p className="mt-3 leading-tight text-justify text-[13px] text-black">
                 You are requested to debit our Account No. <span className="font-bold">{advice.debitAccount}</span> by an amount of <span className="font-bold">{formatCurrency(advice.totalAmount)}</span>
                 ( <span className="font-bold">{amountToWords(advice.totalAmount)}</span> ). The amount is to be transferred via BEFTN to employees' personal savings accounts as per the list provided below.
               </p>
               
               <div className="mt-4">
-                <table className="w-full border-collapse border border-black table-fixed text-[11px]">
+                <table className="w-full border-collapse border border-black table-fixed text-[12px]">
                   <thead className="bg-gray-50">
                     <tr className="border-b border-black h-[16pt]">
-                      <th className="p-0.5 border-r border-black font-bold text-center align-middle text-black" style={{width: '4%'}}>SL</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1 text-black" style={{width: '8%'}}>ID</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1 text-black" style={{width: '24%'}}>Employee Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1 text-black" style={{width: '16%'}}>Designation</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1 text-black" style={{width: '12%'}}>Bank Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1 text-black" style={{width: '12%'}}>Branch Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1 text-black" style={{width: '12%'}}>A/C Number</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle text-center text-black" style={{width: '6%'}}>Routing</th>
-                      <th className="p-0.5 text-right font-bold align-middle pr-1 text-black" style={{width: '10%'}}>Amount</th>
+                      <th className="p-0 border-r border-black font-bold text-center align-middle text-black h-[16pt]" style={{width: '4%'}}>SL</th>
+                      <th className="p-0 border-r border-black font-bold align-middle pl-1 text-black h-[16pt]" style={{width: '8%'}}>ID</th>
+                      <th className="p-0 border-r border-black font-bold align-middle pl-1 text-black h-[16pt]" style={{width: '24%'}}>Employee Name</th>
+                      <th className="p-0 border-r border-black font-bold align-middle pl-1 text-black h-[16pt]" style={{width: '16%'}}>Designation</th>
+                      <th className="p-0 border-r border-black font-bold align-middle pl-1 text-black h-[16pt]" style={{width: '12%'}}>Bank Name</th>
+                      <th className="p-0 border-r border-black font-bold align-middle pl-1 text-black h-[16pt]" style={{width: '12%'}}>Branch Name</th>
+                      <th className="p-0 border-r border-black font-bold align-middle pl-1 text-black h-[16pt]" style={{width: '12%'}}>A/C Number</th>
+                      <th className="p-0 border-r border-black font-bold align-middle text-center text-black h-[16pt]" style={{width: '6%'}}>Routing</th>
+                      <th className="p-0 text-right font-bold align-middle pr-1 text-black h-[16pt]" style={{width: '10%'}}>Amount</th>
                     </tr>
                   </thead>
                   <tbody className="text-black">
                     {advice.employees.map((item, index) => (
                       <tr key={item.employee.id} className="border-b border-black h-[16pt]">
-                        <td className="p-0 border-r border-black text-center align-middle">{index + 1}</td>
-                        <td className="p-0 border-r border-black font-mono align-middle pl-1">{item.employee.id}</td>
-                        <td className="p-0 border-r border-black font-medium align-middle pl-1">{item.employee.name}</td>
-                        <td className="p-0 border-r border-black align-middle pl-1">{item.employee.designation}</td>
-                        <td className="p-0 border-r border-black align-middle pl-1">{item.employee.bankName}</td>
-                        <td className="p-0 border-r border-black align-middle pl-1">{item.employee.branch}</td>
-                        <td className="p-0 border-r border-black font-mono align-middle pl-1">{item.employee.accountNumber}</td>
-                        <td className="p-0 border-r border-black font-mono align-middle text-center">{item.employee.routing}</td>
-                        <td className="p-0 text-right font-mono font-bold align-middle pr-1">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(item.netPayment)}</td>
+                        <td className="p-0 border-r border-black text-center align-middle h-[16pt]">{index + 1}</td>
+                        <td className="p-0 border-r border-black font-mono align-middle pl-1 h-[16pt]">{item.employee.id}</td>
+                        <td className="p-0 border-r border-black font-medium align-middle pl-1 h-[16pt]">{item.employee.name}</td>
+                        <td className="p-0 border-r border-black align-middle pl-1 h-[16pt]">{item.employee.designation}</td>
+                        <td className="p-0 border-r border-black align-middle pl-1 h-[16pt]">{item.employee.bankName}</td>
+                        <td className="p-0 border-r border-black align-middle pl-1 h-[16pt]">{item.employee.branch}</td>
+                        <td className="p-0 border-r border-black font-mono align-middle pl-1 h-[16pt]">{item.employee.accountNumber}</td>
+                        <td className="p-0 border-r border-black font-mono align-middle text-center h-[16pt]">{item.employee.routing}</td>
+                        <td className="p-0 text-right font-mono font-bold align-middle pr-1 h-[16pt]">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(item.netPayment)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -263,24 +263,24 @@ export default function PrintAdvicePage() {
                           <span className="mx-2 font-normal">|</span>
                           <span className="ml-2">In Words: {amountToWords(advice.totalAmount)}</span>
                         </td>
-                        <td className="p-0.5 text-right font-mono text-[12px] align-middle pr-1">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
+                        <td className="p-0.5 text-right font-mono text-[13px] align-middle pr-1">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
                     </tr>
                    </tfoot>
                 </table>
               </div>
             </main>
 
-            <footer className="mt-28 grid grid-cols-2 gap-40 text-center text-[12px] pb-12">
+            <footer className="mt-28 grid grid-cols-2 gap-40 text-center text-[13px] pb-12">
                 <div className="flex flex-col items-center">
                     <div className="border-t border-black w-full pt-1">
                       <p className="font-bold text-black">AGM Finance</p>
-                      <p className="text-[11px] text-black">Gazipur Palli Bidyut Samity-2</p>
+                      <p className="text-[12px] text-black">Gazipur Palli Bidyut Samity-2</p>
                     </div>
                 </div>
                 <div className="flex flex-col items-center">
                     <div className="border-t border-black w-full pt-1">
                       <p className="font-bold text-black">Senior General Manager</p>
-                      <p className="text-[11px] text-black">Gazipur Palli Bidyut Samity-2</p>
+                      <p className="text-[12px] text-black">Gazipur Palli Bidyut Samity-2</p>
                     </div>
                 </div>
             </footer>
