@@ -1,27 +1,22 @@
 'use client';
+
 import React from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
-import { FileText, Users, Banknote } from 'lucide-react';
+import { FileText, Users, Banknote, Loader2 } from 'lucide-react';
 import type { BankAdvice, Employee } from '@/types';
-import { Skeleton } from '@/components/ui/skeleton';
-import { getAdvices, getEmployees } from '@/lib/storage';
-
+import { useFirestore, useCollection } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export default function DashboardPage() {
-  const [advices, setAdvices] = React.useState<BankAdvice[]>([]);
-  const [employees, setEmployees] = React.useState<Employee[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const firestore = useFirestore();
+  
+  const advicesQuery = React.useMemo(() => firestore ? collection(firestore, 'advices') : null, [firestore]);
+  const employeesQuery = React.useMemo(() => firestore ? collection(firestore, 'employees') : null, [firestore]);
 
-  React.useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      setAdvices(getAdvices());
-      setEmployees(getEmployees());
-      setIsLoading(false);
-    }, 500);
-  }, []);
+  const { data: advices, isLoading: isLoadingAdvices } = useCollection<BankAdvice>(advicesQuery as any);
+  const { data: employees, isLoading: isLoadingEmployees } = useCollection<Employee>(employeesQuery as any);
 
   const stats = React.useMemo(() => {
     const totalAdvices = advices?.length || 0;
@@ -32,6 +27,8 @@ export default function DashboardPage() {
     
     return { totalAdvices, totalEmployees, totalAmountIssued };
   }, [advices, employees]);
+
+  const isLoading = isLoadingAdvices || isLoadingEmployees;
 
   return (
     <div className="flex flex-col gap-8">
@@ -46,9 +43,9 @@ export default function DashboardPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.totalAdvices}</div>}
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <div className="text-2xl font-bold">{stats.totalAdvices}</div>}
             <p className="text-xs text-muted-foreground">
-              advices created in total
+              advices created in Firestore
             </p>
           </CardContent>
         </Card>
@@ -60,9 +57,9 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-             {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.totalEmployees}</div>}
+             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <div className="text-2xl font-bold">{stats.totalEmployees}</div>}
             <p className="text-xs text-muted-foreground">
-              employees in your registry
+              employees in your cloud registry
             </p>
           </CardContent>
         </Card>
@@ -74,7 +71,7 @@ export default function DashboardPage() {
             <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-             {isLoading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">{formatCurrency(stats.totalAmountIssued)}</div>}
+             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <div className="text-2xl font-bold">{formatCurrency(stats.totalAmountIssued)}</div>}
             <p className="text-xs text-muted-foreground">
               across all issued advices
             </p>

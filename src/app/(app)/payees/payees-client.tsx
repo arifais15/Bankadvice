@@ -6,7 +6,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import * as XLSX from 'xlsx';
 import type { Employee } from '@/types';
-import { getEmployees, saveEmployees } from '@/lib/storage';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, doc, setDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 import {
   Table,
@@ -54,7 +57,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
 const employeeSchema = z.object({
@@ -74,15 +76,16 @@ export function PayeesClient() {
   const [isBulkUploadOpen, setIsBulkUploadOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [editingEmployee, setEditingEmployee] = React.useState<Employee | null>(null);
-  const [employees, setEmployees] = React.useState<Employee[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-
+  
+  const firestore = useFirestore();
   const { toast } = useToast();
 
-  React.useEffect(() => {
-    setEmployees(getEmployees());
-    setIsLoading(false);
-  }, []);
+  const employeesQuery = React.useMemo(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'employees'), orderBy('id', 'asc'));
+  }, [firestore]);
+
+  const { data: employees, isLoading } = useCollection<Employee>(employeesQuery as any);
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
@@ -118,35 +121,41 @@ export function PayeesClient() {
   };
 
   const handleDeleteEmployee = (employeeId: string) => {
-    const updatedEmployees = employees.filter(e => e.id !== employeeId);
-    setEmployees(updatedEmployees);
-    saveEmployees(updatedEmployees);
+    if (!firestore) return;
+    const employeeRef = doc(firestore, 'employees', employeeId);
+    deleteDoc(employeeRef).catch(async (error) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: employeeRef.path,
+        operation: 'delete',
+      }));
+    });
     toast({ title: "Employee Deleted", description: "The employee has been removed from the registry." });
   };
 
   const onSubmit = async (formData: EmployeeFormValues) => {
+    if (!firestore) return;
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    let updatedEmployees;
-    if (editingEmployee) {
-      updatedEmployees = employees.map(e => e.id === formData.id ? formData : e)
-      toast({
-        title: 'Employee Updated',
-        description: `${formData.name}'s details have been saved.`,
-      });
-    } else {
-      updatedEmployees = [...employees, formData];
-      toast({
-        title: 'Employee Added',
-        description: `${formData.name}'s details have been saved.`,
-      });
-    }
-    setEmployees(updatedEmployees);
-    saveEmployees(updatedEmployees);
     
-    setIsSubmitting(false);
-    setIsFormOpen(false);
+    const employeeRef = doc(firestore, 'employees', formData.id);
+    
+    setDoc(employeeRef, formData, { merge: true })
+      .then(() => {
+        toast({
+          title: editingEmployee ? 'Employee Updated' : 'Employee Added',
+          description: `${formData.name}'s details have been saved to Firestore.`,
+        });
+        setIsFormOpen(false);
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: employeeRef.path,
+          operation: 'write',
+          requestResourceData: formData,
+        }));
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
   
   const handleDownloadTemplate = () => {
@@ -159,6 +168,7 @@ export function PayeesClient() {
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!firestore) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -181,72 +191,33 @@ export function PayeesClient() {
         }
 
         const rows = json.slice(1) as any[][];
-        if (rows.length === 0) {
-            toast({ title: 'Empty File', description: 'The uploaded file has no data rows.' });
-            return;
-        }
+        const batchPromises: Promise<void>[] = [];
 
-        const newEmployees: Employee[] = [];
-        const validationErrors: string[] = [];
-
-        rows.forEach((row, index) => {
+        rows.forEach((row) => {
             const rowData: any = {};
             expectedHeaders.forEach((header, i) => {
                 rowData[header] = row[i] !== undefined ? String(row[i]) : '';
             });
 
             const result = employeeSchema.safeParse(rowData);
-
             if (result.success) {
-                if (employees.some(e => e.id === result.data.id) || newEmployees.some(e => e.id === result.data.id)) {
-                    validationErrors.push(`Row ${index + 2}: Employee ID "${result.data.id}" already exists.`);
-                } else {
-                    newEmployees.push(result.data);
-                }
-            } else {
-                const errors = result.error.errors.map(err => err.message).join(', ');
-                validationErrors.push(`Row ${index + 2}: ${errors}`);
+                const employeeRef = doc(firestore!, 'employees', result.data.id);
+                batchPromises.push(setDoc(employeeRef, result.data, { merge: true }));
             }
         });
         
-        if (newEmployees.length > 0) {
-            const updatedEmployees = [...employees, ...newEmployees];
-            setEmployees(updatedEmployees);
-            saveEmployees(updatedEmployees);
-            if (validationErrors.length > 0) {
-                toast({
-                    title: 'Upload Partially Successful',
-                    description: `${newEmployees.length} employees added. ${validationErrors.length} rows had errors and were skipped.`,
-                });
-            } else {
-                 toast({
-                    title: 'Upload Successful',
-                    description: `${newEmployees.length} new employees have been added.`,
-                });
-            }
+        Promise.all(batchPromises)
+          .then(() => {
+            toast({
+              title: 'Upload Successful',
+              description: `${batchPromises.length} employees have been processed and synced.`,
+            });
             setIsBulkUploadOpen(false);
-        } else {
-            if (validationErrors.length > 0) {
-                toast({
-                    variant: 'destructive',
-                    title: 'Upload Failed',
-                    description: (
-                        <div className="max-h-40 overflow-y-auto">
-                            <p className="mb-2">No valid new employees found. Please check the errors:</p>
-                            <ul className="list-disc list-inside text-xs">
-                                {validationErrors.map((err, i) => <li key={i}>{err}</li>).slice(0, 5)}
-                                {validationErrors.length > 5 && <li>...and {validationErrors.length - 5} more.</li>}
-                            </ul>
-                        </div>
-                    ),
-                });
-            } else {
-                toast({
-                    title: 'No New Data',
-                    description: 'The file was empty or contained only existing employees.',
-                });
-            }
-        }
+          })
+          .catch((error) => {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Partial Failure', description: 'Some employees could not be saved. Check permissions.' });
+          });
 
       } catch (error) {
         console.error(error);
@@ -316,11 +287,11 @@ export function PayeesClient() {
                             <DropdownMenuItem onClick={() => handleOpenForm(employee)}>
                               <Edit className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
-                            <AlertDialogTrigger asChild>
+                            <DialogTrigger asChild>
                               <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
                               </DropdownMenuItem>
-                            </AlertDialogTrigger>
+                            </DialogTrigger>
                           </DropdownMenuContent>
                         </DropdownMenu>
                         <AlertDialogContent>
@@ -345,7 +316,7 @@ export function PayeesClient() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={8} className="h-24 text-center">
-                    No employees found.
+                    No employees found in Firestore.
                   </TableCell>
                 </TableRow>
               )}

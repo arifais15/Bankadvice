@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -24,21 +23,18 @@ import {
 import { MoreHorizontal, Printer, Eye, Edit, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { BankAdvice } from '@/types';
-import { getAdvices } from '@/lib/storage';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, query, orderBy } from 'firebase/firestore';
 
 export function AdvicesClient() {
-  const [advices, setAdvices] = React.useState<BankAdvice[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const firestore = useFirestore();
+  
+  const advicesQuery = React.useMemo(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'advices'), orderBy('date', 'desc'));
+  }, [firestore]);
 
-  React.useEffect(() => {
-    setAdvices(getAdvices());
-    setIsLoading(false);
-  }, []);
-
-  const sortedAdvices = React.useMemo(() => {
-    if (!advices) return [];
-    return [...advices].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [advices]);
+  const { data: advices, isLoading } = useCollection<BankAdvice>(advicesQuery as any);
 
   if (isLoading) {
     return (
@@ -67,8 +63,8 @@ export function AdvicesClient() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedAdvices.length > 0 ? (
-              sortedAdvices.map((advice) => (
+            {advices && advices.length > 0 ? (
+              advices.map((advice) => (
                 <TableRow key={advice.id}>
                   <TableCell className="font-medium">
                     {advice.adviceNumber}
@@ -128,7 +124,7 @@ export function AdvicesClient() {
             ) : (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
-                  No advices found.
+                  No advices found in Firestore.
                 </TableCell>
               </TableRow>
             )}

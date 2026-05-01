@@ -14,10 +14,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormDescription } fr
 import { useToast } from '@/hooks/use-toast';
 import type { PrintSettings } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useFirestore } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { usePrintSettings } from '@/hooks/use-print-settings';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
+  const firestore = useFirestore();
+  const { settings, isLoading } = usePrintSettings();
   const [isSaving, setIsSaving] = useState(false);
 
   const form = useForm<PrintSettings>({
@@ -25,51 +31,35 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    try {
-      const savedSettings = localStorage.getItem('printSettings');
-      if (savedSettings) {
-        form.reset({ ...defaultSettings, ...JSON.parse(savedSettings) });
-      }
-    } catch (error) {
-      console.error("Could not load settings from localStorage", error);
-    } finally {
-      setIsLoading(false);
+    if (settings) {
+      form.reset(settings);
     }
-  }, [form]);
+  }, [settings, form]);
 
-  const onSubmit = (data: PrintSettings) => {
+  const onSubmit = async (data: PrintSettings) => {
+    if (!firestore) return;
     setIsSaving(true);
-    try {
-      const dataToSave = {
-        ...data,
-        watermarkUrl: data.watermarkEnabled ? data.watermarkUrl : '',
-      };
-      localStorage.setItem('printSettings', JSON.stringify(dataToSave));
-      toast({
-        title: 'Settings Saved',
-        description: 'Your print settings have been updated.',
-      });
-      // A full reload ensures all components pick up the new settings
-      // This is a simple way to propagate changes without a complex state management solution.
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-      let description = 'An unexpected error occurred.';
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-          description = 'Storage limit exceeded. Please use smaller image URLs.';
-      }
-      toast({
-        variant: 'destructive',
-        title: 'Save Failed',
-        description: description,
-      });
-    } finally {
-       setTimeout(() => {
+    
+    const settingsRef = doc(firestore, 'settings', 'print');
+    
+    setDoc(settingsRef, data, { merge: true })
+      .then(() => {
+        toast({
+          title: 'Settings Saved',
+          description: 'Your print settings have been updated in Firestore.',
+        });
+      })
+      .catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: settingsRef.path,
+          operation: 'update',
+          requestResourceData: data,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      })
+      .finally(() => {
         setIsSaving(false);
-      }, 500);
-    }
+      });
   };
 
   const watchedValues = form.watch();
@@ -87,7 +77,7 @@ export default function SettingsPage() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-8">
         <PageHeader
           title="Settings"
-          description="Configure application and print settings."
+          description="Configure application and print settings (Cloud Synced)."
         >
           <Button type="submit" disabled={isSaving}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -97,9 +87,9 @@ export default function SettingsPage() {
         
         <Alert>
           <Info className="h-4 w-4" />
-          <AlertTitle>Image Handling</AlertTitle>
+          <AlertTitle>Cloud Persistence</AlertTitle>
           <AlertDescription>
-            Please provide public URLs for images (e.g., from a storage service or image hosting site). Direct image uploads are not supported to prevent browser storage issues.
+            Settings are now saved directly to Firestore. Changes will reflect across all devices instantly.
           </AlertDescription>
         </Alert>
 
@@ -126,7 +116,7 @@ export default function SettingsPage() {
                   <FormDescription>Used in the sidebar and print headers.</FormDescription>
                   {watchedValues.companyLogoUrl && (
                     <div className="mt-4 relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
-                      <Image src={watchedValues.companyLogoUrl} alt="Logo Preview" fill style={{ objectFit: 'contain' }} />
+                      <Image src={watchedValues.companyLogoUrl} alt="Logo Preview" fill style={{ objectFit: 'contain' }} unoptimized />
                     </div>
                   )}
                 </FormItem>
@@ -158,10 +148,10 @@ export default function SettingsPage() {
                       <FormControl>
                         <Input placeholder="https://example.com/seal.png" {...field} />
                       </FormControl>
-                      <FormDescription>Used on printed documents.</FormDescription>
+                      <FormDescription>Only visible when enabled above.</FormDescription>
                       {watchedValues.companySealUrl && (
                         <div className="mt-4 relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
-                          <Image src={watchedValues.companySealUrl} alt="Seal Preview" fill style={{ objectFit: 'contain' }} />
+                          <Image src={watchedValues.companySealUrl} alt="Seal Preview" fill style={{ objectFit: 'contain' }} unoptimized />
                         </div>
                       )}
                     </FormItem>
@@ -229,7 +219,7 @@ export default function SettingsPage() {
                       <FormDescription>If empty, the company logo will be used as the watermark.</FormDescription>
                        {watchedValues.watermarkUrl && (
                         <div className="mt-4 relative w-40 h-40 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
-                            <Image src={watchedValues.watermarkUrl} alt="Watermark Preview" fill style={{ objectFit: 'contain' }} />
+                            <Image src={watchedValues.watermarkUrl} alt="Watermark Preview" fill style={{ objectFit: 'contain' }} unoptimized />
                         </div>
                         )}
                     </FormItem>

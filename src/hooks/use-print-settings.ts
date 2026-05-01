@@ -1,26 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
+import { doc } from 'firebase/firestore';
+import { useFirestore, useDoc } from '@/firebase';
 import type { PrintSettings } from '@/types';
 import { printSettings as defaultSettings } from '@/lib/settings';
 
-export function usePrintSettings(): { settings: PrintSettings; isLoading: boolean } {
-  const [settings, setSettings] = useState<PrintSettings>(defaultSettings);
-  const [isLoading, setIsLoading] = useState(true);
+export function usePrintSettings() {
+  const firestore = useFirestore();
+  const settingsRef = useMemo(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'settings', 'print');
+  }, [firestore]);
 
-  useEffect(() => {
-    try {
-      const savedSettings = localStorage.getItem('printSettings');
-      if (savedSettings) {
-        setSettings({ ...defaultSettings, ...JSON.parse(savedSettings) });
-      }
-    } catch (error) {
-      console.error("Could not load settings from localStorage", error);
-      // Fallback to default settings is already handled by initial state
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const { data, isLoading } = useDoc<PrintSettings>(settingsRef as any);
 
-  return { settings, isLoading };
+  return { 
+    settings: data ? { ...defaultSettings, ...data } : defaultSettings, 
+    isLoading 
+  };
 }

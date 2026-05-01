@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -25,7 +24,10 @@ import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
 import type { Employee, BankAdvice } from '@/types';
 import { defaultSubjects } from '@/lib/data';
-import { getAdvices, saveAdvices, getEmployees } from '@/lib/storage';
+import { useFirestore, useCollection } from '@/firebase';
+import { doc, setDoc, collection, query, orderBy } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -90,11 +92,18 @@ type AdviceComposerProps = {
 export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const isEditMode = !!adviceToEdit;
 
-  const [allEmployees, setAllEmployees] = React.useState<Employee[]>([]);
+  const employeesQuery = React.useMemo(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'employees'), orderBy('name', 'asc'));
+  }, [firestore]);
+
+  const { data: allEmployees } = useCollection<Employee>(employeesQuery as any);
+  
   const [open, setOpen] = React.useState(false);
   const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | null>(null);
   const [netPayment, setNetPayment] = React.useState('');
@@ -105,7 +114,6 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
   const defaultRefNo = `27.12.3330.537.03.043.${new Date().getFullYear().toString().slice(-2)}`;
 
   React.useEffect(() => {
-    setAllEmployees(getEmployees());
     try {
       const customSubjects = localStorage.getItem('customSubjects');
       if (customSubjects) {
@@ -113,7 +121,7 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
         setSubjects(prev => [...new Set([...prev, ...parsedSubjects])]);
       }
     } catch (error) {
-      console.error("Failed to load custom subjects from localStorage", error);
+      console.error("Failed to load custom subjects", error);
     }
   }, []);
 
@@ -191,81 +199,52 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
     try {
       const result = await generateAdviceNarrative({ purpose, context: context || '' });
       form.setValue('narrative', result.narrative, { shouldValidate: true });
-      toast({
-        title: 'Narrative Generated',
-        description: 'AI-powered narrative has been added.',
-      });
     } catch (error) {
       console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Generation Failed',
-        description: 'Could not generate narrative. Please try again.',
-      });
+      toast({ variant: 'destructive', title: 'Generation Failed', description: 'Could not generate narrative.' });
     } finally {
       setIsGenerating(false);
     }
   };
 
-
   const onSubmit = async (data: AdviceFormValues) => {
+    if (!firestore) return;
     setIsSubmitting(true);
     try {
-      // Save new subject to localStorage
-      if (data.subject && !subjects.includes(data.subject)) {
-        const customSubjects = JSON.parse(localStorage.getItem('customSubjects') || '[]');
-        const newCustomSubjects = [...new Set([...customSubjects, data.subject])];
-        localStorage.setItem('customSubjects', JSON.stringify(newCustomSubjects));
-        setSubjects(prev => [...new Set([...prev, data.subject])]);
-      }
+      const adviceId = isEditMode && adviceToEdit ? adviceToEdit.id : generateAdviceNumber();
+      const adviceRef = doc(firestore, 'advices', adviceId);
       
-      const advicePayload = {
+      const payload: BankAdvice = {
         ...data,
+        id: adviceId,
+        adviceNumber: adviceId,
         date: data.date.toISOString(),
+        totalAmount,
+        status: adviceToEdit?.status || 'Draft',
       };
-      
-      const allAdvices = getAdvices();
 
-      if (isEditMode && adviceToEdit) {
-        const adviceIndex = allAdvices.findIndex(a => a.id === adviceToEdit.id);
-        if (adviceIndex !== -1) {
-          allAdvices[adviceIndex] = { ...allAdvices[adviceIndex], ...advicePayload, totalAmount };
-          saveAdvices(allAdvices);
+      setDoc(adviceRef, payload, { merge: true })
+        .then(() => {
           toast({
-            title: 'Advice Updated',
-            description: `Advice ${allAdvices[adviceIndex].adviceNumber} has been saved.`,
+            title: isEditMode ? 'Advice Updated' : 'Advice Created',
+            description: `Advice ${adviceId} has been synced to Firestore.`,
           });
-        }
-      } else {
-        const allIds = allAdvices.map(a => parseInt(a.id, 10)).filter(id => !isNaN(id));
-        const newId = (allIds.length > 0 ? Math.max(...allIds) : 0) + 1;
-        const newAdvice: BankAdvice = {
-          ...advicePayload,
-          id: newId.toString(),
-          adviceNumber: generateAdviceNumber(),
-          status: 'Draft' as const,
-          totalAmount: totalAmount,
-        };
-        saveAdvices([...allAdvices, newAdvice]);
-        toast({
-          title: 'Advice Created',
-          description: `Advice ${newAdvice.adviceNumber} has been created as a draft.`,
-        });
-      }
-      router.push('/advices');
-      router.refresh();
+          router.push('/advices');
+        })
+        .catch(async (error) => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: adviceRef.path,
+            operation: 'write',
+            requestResourceData: payload,
+          }));
+        })
+        .finally(() => setIsSubmitting(false));
+
     } catch (error) {
-      console.error("Failed to save advice:", error);
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description: "Could not save the advice.",
-      });
-    } finally {
+      console.error(error);
       setIsSubmitting(false);
     }
   };
-
 
   return (
     <Form {...form}>
@@ -283,8 +262,7 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                 <DialogHeader>
                     <DialogTitle>Advice Configuration</DialogTitle>
                     <DialogDescription>
-                    Set the core details for this advice document. These can be
-                    changed later.
+                    Set the core details for this advice document.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-6 py-4">
@@ -312,7 +290,7 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                         <FormLabel>Debit Account</FormLabel>
                         <FormControl>
                             <Input
-                            placeholder="Enter the account number to debit"
+                            placeholder="Enter account number"
                             {...field}
                             />
                         </FormControl>
@@ -326,11 +304,10 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                         name="bankName"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Recipient Bank Name</FormLabel>
+                            <FormLabel>Recipient Bank</FormLabel>
                             <FormControl>
-                            <Input placeholder="e.g., Agrani Bank PLC" {...field} />
+                            <Input placeholder="Agrani Bank" {...field} />
                             </FormControl>
-                            <FormMessage />
                         </FormItem>
                         )}
                     />
@@ -339,14 +316,10 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                         name="bankBranch"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Recipient Branch Name</FormLabel>
+                            <FormLabel>Branch</FormLabel>
                             <FormControl>
-                            <Input
-                                placeholder="e.g., Rajabari Bazar Branch"
-                                {...field}
-                            />
+                            <Input placeholder="Main Branch" {...field} />
                             </FormControl>
-                            <FormMessage />
                         </FormItem>
                         )}
                     />
@@ -360,7 +333,6 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                 </DialogContent>
             </Dialog>
         </div>
-
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           <div className="lg:col-span-2 space-y-8">
@@ -380,16 +352,10 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                         <FormItem>
                         <FormLabel>Subject</FormLabel>
                         <FormControl>
-                            <Input
-                            placeholder="e.g., Monthly Payroll - May 2024"
-                            {...field}
-                            list="subject-suggestions"
-                            />
+                            <Input placeholder="Monthly Salary" {...field} list="subject-suggestions" />
                         </FormControl>
                         <datalist id="subject-suggestions">
-                            {subjects.map((subject) => (
-                            <option key={subject} value={subject} />
-                            ))}
+                            {subjects.map((s) => <option key={s} value={s} />)}
                         </datalist>
                         <FormMessage />
                         </FormItem>
@@ -404,32 +370,16 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "w-full pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, "dd-MMM-yyyy")
-                                  ) : (
-                                    <span>Pick a date</span>
-                                  )}
+                                <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                  {field.value ? format(field.value, "dd-MMM-yyyy") : <span>Pick a date</span>}
                                   <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                              />
+                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
                             </PopoverContent>
                           </Popover>
-                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -446,55 +396,20 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="purpose"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Purpose</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., Payroll" {...field} />
-                          </FormControl>
-                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="context"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Context (Optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., for May salaries" {...field} />
-                          </FormControl>
-                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <FormField control={form.control} name="purpose" render={({ field }) => (
+                      <FormItem><FormLabel>Purpose</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name="context" render={({ field }) => (
+                      <FormItem><FormLabel>Context</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                    )} />
                 </div>
                  <Button type="button" variant="outline" size="sm" onClick={handleGenerateNarrative} disabled={isGenerating}>
                     {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                     Generate with AI
                  </Button>
-
-                <FormField
-                  control={form.control}
-                  name="narrative"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Advice Narrative</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="A descriptive text for the bank advice..."
-                          rows={4}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormField control={form.control} name="narrative" render={({ field }) => (
+                    <FormItem><FormLabel>Narrative</FormLabel><FormControl><Textarea rows={4} {...field} /></FormControl></FormItem>
+                )} />
               </CardContent>
             </Card>
           </div>
@@ -504,7 +419,7 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Users className="h-5 w-5 text-primary" />
-                  <span>{editingIndex !== null ? 'Edit Employee' : 'Add Employee'}</span>
+                  <span>{editingIndex !== null ? 'Edit Item' : 'Add Item'}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -512,38 +427,19 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                     <Label>Employee</Label>
                     <Popover open={open} onOpenChange={setOpen}>
                       <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={open}
-                          className="w-full justify-between font-normal"
-                        >
-                          {selectedEmployee
-                            ? allEmployees?.find((p) => p.id === selectedEmployee.id)?.name
-                            : 'Select employee...'}
+                        <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                          {selectedEmployee ? selectedEmployee.name : 'Select...'}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command>
-                          <CommandInput placeholder="Search employee by name..." />
+                          <CommandInput placeholder="Search..." />
                           <CommandEmpty>No employee found.</CommandEmpty>
                           <CommandGroup>
                             {allEmployees?.map((p) => (
-                              <CommandItem
-                                key={p.id}
-                                value={p.name}
-                                onSelect={() => {
-                                  setSelectedEmployee(p);
-                                  setOpen(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    'mr-2 h-4 w-4',
-                                    selectedEmployee?.id === p.id ? 'opacity-100' : 'opacity-0'
-                                  )}
-                                />
+                              <CommandItem key={p.id} value={p.name} onSelect={() => { setSelectedEmployee(p); setOpen(false); }}>
+                                <Check className={cn('mr-2 h-4 w-4', selectedEmployee?.id === p.id ? 'opacity-100' : 'opacity-0')} />
                                 {p.name}
                               </CommandItem>
                             ))}
@@ -553,106 +449,51 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                     </Popover>
                 </div>
                 <div className="space-y-2">
-                  <Label>Net Payment</Label>
-                  <Input 
-                    type="number"
-                    placeholder="0.00"
-                    value={netPayment}
-                    onChange={(e) => setNetPayment(e.target.value)}
-                  />
+                  <Label>Amount</Label>
+                  <Input type="number" value={netPayment} onChange={(e) => setNetPayment(e.target.value)} />
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col gap-2">
                   <Button type="button" className="w-full" onClick={handleAddOrUpdateEmployee} disabled={!selectedEmployee || !netPayment}>
-                    {editingIndex !== null ? (
-                        <><Edit className="mr-2 h-4 w-4" /> Update Item</>
-                    ) : (
-                        <><PlusCircle className="mr-2 h-4 w-4" /> Add to Advice</>
-                    )}
+                    {editingIndex !== null ? 'Update' : 'Add to Advice'}
                   </Button>
-                  {editingIndex !== null && (
-                    <Button type="button" variant="ghost" className="w-full" onClick={() => {
-                        setEditingIndex(null);
-                        setSelectedEmployee(null);
-                        setNetPayment('');
-                    }}>
-                        Cancel Edit
-                    </Button>
-                  )}
+                  {editingIndex !== null && <Button type="button" variant="ghost" className="w-full" onClick={() => { setEditingIndex(null); setSelectedEmployee(null); setNetPayment(''); }}>Cancel</Button>}
               </CardFooter>
             </Card>
           </div>
         </div>
 
         <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <ListChecks className="h-5 w-5 text-primary" />
-                  <span>Employee Breakdown</span>
-                </CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Employee Breakdown</CardTitle></CardHeader>
             <CardContent>
                 <div className="border rounded-md">
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>ID</TableHead>
-                                <TableHead>Employee Name</TableHead>
-                                <TableHead>Designation</TableHead>
+                                <TableHead>Name</TableHead>
                                 <TableHead className="text-right">Net Payment</TableHead>
                                 <TableHead className="w-[100px] text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {fields.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
-                                        No employees added yet.
+                            {fields.length === 0 ? <TableRow><TableCell colSpan={4} className="h-24 text-center">Empty.</TableCell></TableRow> : fields.map((field, index) => (
+                                <TableRow key={field.id}>
+                                    <TableCell className="font-mono">{field.employee.id}</TableCell>
+                                    <TableCell>{field.employee.name}</TableCell>
+                                    <TableCell className="text-right">{formatCurrency(field.netPayment)}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon" type="button" onClick={() => handleStartEditing(index)}><Edit className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="icon" type="button" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                     </TableCell>
                                 </TableRow>
-                            ) : (
-                                fields.map((field, index) => (
-                                    <TableRow key={field.id}>
-                                        <TableCell className="font-mono">{field.employee.id}</TableCell>
-                                        <TableCell>{field.employee.name}</TableCell>
-                                        <TableCell>{field.employee.designation}</TableCell>
-                                        <TableCell className="w-[180px]">
-                                            <FormField
-                                                control={form.control}
-                                                name={`employees.${index}.netPayment`}
-                                                render={({ field: { onChange, ...restField } }) => (
-                                                    <FormItem>
-                                                        <FormControl>
-                                                            <Input
-                                                                type="number"
-                                                                className="text-right h-9"
-                                                                step="0.01"
-                                                                {...restField}
-                                                                onChange={e => onChange(parseFloat(e.target.value) || 0)}
-                                                            />
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" type="button" onClick={() => handleStartEditing(index)}>
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" type="button" onClick={() => remove(index)}>
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
+                            ))}
                         </TableBody>
                     </Table>
                 </div>
             </CardContent>
-            <CardFooter className="flex justify-end gap-4 items-center bg-muted/50 py-4 px-6">
-                <span className="text-sm text-muted-foreground">Total Amount</span>
+            <CardFooter className="flex justify-end gap-4 bg-muted/50 py-4 px-6">
+                <span className="text-sm text-muted-foreground">Total</span>
                 <span className="font-bold text-xl">{formatCurrency(totalAmount)}</span>
             </CardFooter>
         </Card>
