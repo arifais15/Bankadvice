@@ -181,7 +181,7 @@ export default function PrintAdvicePage() {
           )}
 
           <div className="relative z-10">
-             <header className="grid grid-cols-[1fr_2.5fr_1.2fr] items-start gap-4 pb-4 font-sans border-b-2 border-black">
+             <header className="grid grid-cols-[1fr_2fr_1.5fr] items-start gap-4 pb-4 font-sans border-b-2 border-black">
                 <div className="flex justify-start">
                   {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={90} height={90} unoptimized className="object-contain" />}
                 </div>
@@ -191,8 +191,12 @@ export default function PrintAdvicePage() {
                 </div>
                 <div className="text-right flex flex-col items-end">
                   {sealEnabled && finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={80} height={80} unoptimized className="opacity-80 object-contain mb-1" />}
-                  <p className="text-[12px] font-nikosh leading-tight text-gray-900">{headerSettings.headerLine3}</p>
-                  <p className="text-[11px] font-nikosh leading-tight text-gray-800">{headerSettings.headerLine4}</p>
+                  <p className="text-[12px] font-nikosh leading-tight text-gray-900 mb-1">{headerSettings.headerLine3}</p>
+                  {headerSettings.headerLine4.split(',').map((line, i) => (
+                    <p key={i} className="text-[11px] font-nikosh leading-tight text-gray-800">
+                      {line.trim()}{i === 0 && headerSettings.headerLine4.includes(',') ? ',' : ''}
+                    </p>
+                  ))}
                 </div>
             </header>
 
