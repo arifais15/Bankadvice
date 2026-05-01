@@ -50,7 +50,7 @@ export default function PrintAdvicePage() {
     try {
       const element = adviceContentRef.current;
       const canvas = await html2canvas(element, {
-        scale: 4, // Ultra high resolution
+        scale: 4, // High resolution for sharp text
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
@@ -135,10 +135,10 @@ export default function PrintAdvicePage() {
 
   const contactLines = headerSettings.headerLine4.split(',').map(l => l.trim()).filter(Boolean);
 
-  // Common cell style for 16pt rows with centered text
+  // Common cell style for 22pt rows with centered text
   const cellStyle: React.CSSProperties = {
-    height: '16pt',
-    lineHeight: '16pt',
+    height: '22pt',
+    lineHeight: '22pt',
     verticalAlign: 'middle',
     padding: 0,
     color: '#000000',
@@ -208,7 +208,7 @@ export default function PrintAdvicePage() {
                 </div>
             </header>
 
-            <div className="flex justify-between items-baseline mt-3 text-[14px]">
+            <div className="flex justify-between items-baseline mt-3 text-[15px]">
               <div className="flex items-center gap-1">
                 <span className="font-bold">Ref.No:</span> <span className="text-black">{advice.refNo}</span>
               </div>
@@ -219,24 +219,24 @@ export default function PrintAdvicePage() {
 
             <main className="mt-2">
               <div className="flex justify-between items-start border-b border-gray-200 pb-0.5">
-                <div className="text-[14px]">
+                <div className="text-[15px]">
                     <p className='font-bold text-black'>Manager</p>
                     <p className="text-black">{advice.bankName}, {advice.bankBranch}</p>
                 </div>
                 <div className="text-right">
-                    <p className="font-bold text-[14px] text-black">Advice No: {advice.adviceNumber}</p>
+                    <p className="font-bold text-[15px] text-black">Advice No: {advice.adviceNumber}</p>
                 </div>
               </div>
               
-              <p className="mt-4 font-bold text-[14px] underline text-black">Subject: {advice.subject}</p>
+              <p className="mt-4 font-bold text-[16px] underline text-black">Subject: {advice.subject}</p>
 
-              <p className="mt-3 leading-tight text-justify text-[14px] text-black">
+              <p className="mt-3 leading-tight text-justify text-[15px] text-black">
                 You are requested to debit our Account No. <span className="font-bold">{advice.debitAccount}</span> by an amount of <span className="font-bold">{formatCurrency(advice.totalAmount)}</span>
                 ( <span className="font-bold">{amountToWords(advice.totalAmount)}</span> ). The amount is to be transferred via BEFTN to employees' personal savings accounts as per the list provided below.
               </p>
               
               <div className="mt-4">
-                <table className="w-full border-collapse border border-black table-fixed text-[12px] leading-none">
+                <table className="w-full border-collapse border border-black table-fixed text-[13px] leading-none">
                   <thead className="bg-gray-50">
                     <tr className="border-b border-black">
                       <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '4%' }}>SL</th>
@@ -266,31 +266,31 @@ export default function PrintAdvicePage() {
                     ))}
                   </tbody>
                   <tfoot className="border-t border-black font-bold text-black">
-                    <tr style={{ height: '20pt', lineHeight: '20pt', verticalAlign: 'middle' }}>
+                    <tr style={{ height: '24pt', lineHeight: '24pt', verticalAlign: 'middle' }}>
                         <td className="border-r border-black text-center" colSpan={2} style={{ color: '#000000' }}>TOTAL</td>
                         <td className="border-r border-black text-left pl-2" colSpan={6} style={{ color: '#000000' }}>
                           <span className="mr-2">Count: {advice.employees.length}</span>
                           <span className="mx-2 font-normal">|</span>
                           <span className="ml-2">In Words: {amountToWords(advice.totalAmount)}</span>
                         </td>
-                        <td className="text-right font-mono text-[14px] pr-1" style={{ color: '#000000' }}>{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
+                        <td className="text-right font-mono text-[15px] pr-1" style={{ color: '#000000' }}>{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
                     </tr>
                    </tfoot>
                 </table>
               </div>
             </main>
 
-            <footer className="mt-28 grid grid-cols-2 gap-40 text-center text-[14px] pb-12">
+            <footer className="mt-28 grid grid-cols-2 gap-40 text-center text-[15px] pb-12">
                 <div className="flex flex-col items-center">
                     <div className="border-t border-black w-full pt-1">
                       <p className="font-bold text-black">AGM Finance</p>
-                      <p className="text-[13px] text-black">Gazipur Palli Bidyut Samity-2</p>
+                      <p className="text-[14px] text-black">Gazipur Palli Bidyut Samity-2</p>
                     </div>
                 </div>
                 <div className="flex flex-col items-center">
                     <div className="border-t border-black w-full pt-1">
                       <p className="font-bold text-black">Senior General Manager</p>
-                      <p className="text-[13px] text-black">Gazipur Palli Bidyut Samity-2</p>
+                      <p className="text-[14px] text-black">Gazipur Palli Bidyut Samity-2</p>
                     </div>
                 </div>
             </footer>
