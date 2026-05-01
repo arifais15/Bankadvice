@@ -230,41 +230,41 @@ export default function PrintAdvicePage() {
                 <table className="w-full border-collapse border border-black table-fixed text-[10px]">
                   <thead className="bg-gray-50">
                     <tr className="border-b border-black">
-                      <th className="p-0.5 border-r border-black font-bold text-center" style={{width: '4%'}}>SL</th>
-                      <th className="p-0.5 border-r border-black font-bold" style={{width: '8%'}}>ID</th>
-                      <th className="p-0.5 border-r border-black font-bold" style={{width: '24%'}}>Employee Name</th>
-                      <th className="p-0.5 border-r border-black font-bold" style={{width: '16%'}}>Designation</th>
-                      <th className="p-0.5 border-r border-black font-bold" style={{width: '12%'}}>Bank Name</th>
-                      <th className="p-0.5 border-r border-black font-bold" style={{width: '12%'}}>Branch Name</th>
-                      <th className="p-0.5 border-r border-black font-bold" style={{width: '12%'}}>A/C Number</th>
-                      <th className="p-0.5 border-r border-black font-bold" style={{width: '6%'}}>Routing</th>
-                      <th className="p-0.5 text-right font-bold" style={{width: '10%'}}>Amount</th>
+                      <th className="p-0.5 border-r border-black font-bold text-center align-middle" style={{width: '4%'}}>SL</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '8%'}}>ID</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '24%'}}>Employee Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '16%'}}>Designation</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '12%'}}>Bank Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '12%'}}>Branch Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '12%'}}>A/C Number</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '6%'}}>Routing</th>
+                      <th className="p-0.5 text-right font-bold align-middle" style={{width: '10%'}}>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
                     {advice.employees.map((item, index) => (
                       <tr key={item.employee.id} className="border-b border-black hover:bg-gray-50 h-[15pt]">
-                        <td className="p-0.5 border-r border-black text-center">{index + 1}</td>
-                        <td className="p-0.5 border-r border-black font-mono">{item.employee.id}</td>
-                        <td className="p-0.5 border-r border-black font-medium">{item.employee.name}</td>
-                        <td className="p-0.5 border-r border-black">{item.employee.designation}</td>
-                        <td className="p-0.5 border-r border-black">{item.employee.bankName}</td>
-                        <td className="p-0.5 border-r border-black">{item.employee.branch}</td>
-                        <td className="p-0.5 border-r border-black font-mono">{item.employee.accountNumber}</td>
-                        <td className="p-0.5 border-r border-black font-mono">{item.employee.routing}</td>
-                        <td className="p-0.5 text-right font-mono font-semibold">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(item.netPayment)}</td>
+                        <td className="p-0.5 border-r border-black text-center align-middle">{index + 1}</td>
+                        <td className="p-0.5 border-r border-black font-mono align-middle">{item.employee.id}</td>
+                        <td className="p-0.5 border-r border-black font-medium align-middle">{item.employee.name}</td>
+                        <td className="p-0.5 border-r border-black align-middle">{item.employee.designation}</td>
+                        <td className="p-0.5 border-r border-black align-middle">{item.employee.bankName}</td>
+                        <td className="p-0.5 border-r border-black align-middle">{item.employee.branch}</td>
+                        <td className="p-0.5 border-r border-black font-mono align-middle">{item.employee.accountNumber}</td>
+                        <td className="p-0.5 border-r border-black font-mono align-middle">{item.employee.routing}</td>
+                        <td className="p-0.5 text-right font-mono font-semibold align-middle">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(item.netPayment)}</td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot className="border-t border-black font-bold bg-gray-50 h-[15pt]">
                     <tr>
-                        <td className="p-0.5 border-r border-black text-center" colSpan={2}>TOTAL</td>
-                        <td className="p-0.5 border-r border-black" colSpan={6}>
+                        <td className="p-0.5 border-r border-black text-center align-middle" colSpan={2}>TOTAL</td>
+                        <td className="p-0.5 border-r border-black align-middle" colSpan={6}>
                           <span className="mr-2">Count: {advice.employees.length}</span>
                           <span className="mx-2">|</span>
                           <span className="ml-2">In Words: {amountToWords(advice.totalAmount)}</span>
                         </td>
-                        <td className="p-0.5 text-right font-mono text-[11px]">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
+                        <td className="p-0.5 text-right font-mono text-[11px] align-middle">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
                     </tr>
                    </tfoot>
                 </table>
