@@ -14,8 +14,6 @@ import {
   Sparkles,
   Loader2,
   FileText,
-  ListChecks,
-  Users,
   Landmark,
   Edit,
   CalendarIcon,
@@ -42,7 +40,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import {
   Table,
   TableBody,
@@ -95,7 +93,12 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
   const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
   const isEditMode = !!adviceToEdit;
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const employeesQuery = React.useMemo(() => {
     if (!firestore) return null;
@@ -223,7 +226,6 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
       status: adviceToEdit?.status || 'Draft',
     };
 
-    // Optimistic Update: Do not await. Proceed to UI feedback immediately.
     setDoc(adviceRef, payload, { merge: true })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -366,7 +368,7 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                             <PopoverTrigger asChild>
                               <FormControl>
                                 <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                                  {field.value ? format(field.value, "dd-MMM-yyyy") : <span>Pick a date</span>}
+                                  {mounted && field.value ? format(field.value, "dd-MMM-yyyy") : <span>Pick a date</span>}
                                   <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                 </Button>
                               </FormControl>
@@ -413,7 +415,7 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <Users className="h-5 w-5 text-primary" />
+                  <PlusCircle className="h-5 w-5 text-primary" />
                   <span>{editingIndex !== null ? 'Edit Item' : 'Add Item'}</span>
                 </CardTitle>
               </CardHeader>
@@ -430,15 +432,17 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command>
                           <CommandInput placeholder="Search..." />
-                          <CommandEmpty>No employee found.</CommandEmpty>
-                          <CommandGroup>
-                            {allEmployees?.map((p) => (
-                              <CommandItem key={p.id} value={p.name} onSelect={() => { setSelectedEmployee(p); setOpen(false); }}>
-                                <Check className={cn('mr-2 h-4 w-4', selectedEmployee?.id === p.id ? 'opacity-100' : 'opacity-0')} />
-                                {p.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
+                          <CommandList>
+                            <CommandEmpty>No employee found.</CommandEmpty>
+                            <CommandGroup>
+                              {allEmployees?.map((p) => (
+                                <CommandItem key={p.id} value={p.name} onSelect={() => { setSelectedEmployee(p); setOpen(false); }}>
+                                  <Check className={cn('mr-2 h-4 w-4', selectedEmployee?.id === p.id ? 'opacity-100' : 'opacity-0')} />
+                                  {p.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
                         </Command>
                       </PopoverContent>
                     </Popover>

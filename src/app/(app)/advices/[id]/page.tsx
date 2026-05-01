@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -28,21 +27,24 @@ import {
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import type { BankAdvice } from '@/types';
-import { getAdvices } from '@/lib/storage';
+import { useFirestore, useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 export default function AdviceDetailsPage() {
   const params = useParams();
-  const [advice, setAdvice] = React.useState<BankAdvice | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  
+  const firestore = useFirestore();
+  const [mounted, setMounted] = React.useState(false);
+
   React.useEffect(() => {
-    const allAdvices = getAdvices();
-    const foundAdvice = allAdvices.find((a) => a.id === params.id);
-    if (foundAdvice) {
-      setAdvice(foundAdvice);
-    }
-    setIsLoading(false);
-  }, [params.id]);
+    setMounted(true);
+  }, []);
+  
+  const adviceRef = React.useMemo(() => {
+    if (!firestore || !params.id) return null;
+    return doc(firestore, 'advices', params.id as string);
+  }, [firestore, params.id]);
+
+  const { data: advice, isLoading } = useDoc<BankAdvice>(adviceRef as any);
 
   if (isLoading) {
     return (
@@ -60,10 +62,10 @@ export default function AdviceDetailsPage() {
     <div className="flex flex-col gap-8">
       <PageHeader
         title={advice.adviceNumber}
-        description={`Details for bank advice created on ${format(
+        description={mounted ? `Details for bank advice created on ${format(
           new Date(advice.date),
           'do MMMM yyyy'
-        )}`}
+        )}` : 'Loading...'}
       >
         <div className="flex items-center gap-2">
             <Button asChild variant="outline">

@@ -28,6 +28,11 @@ import { collection, query, orderBy } from 'firebase/firestore';
 
 export function AdvicesClient() {
   const firestore = useFirestore();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const advicesQuery = React.useMemo(() => {
     if (!firestore) return null;
@@ -71,7 +76,7 @@ export function AdvicesClient() {
                   </TableCell>
                   <TableCell>{advice.subject}</TableCell>
                   <TableCell>
-                    {format(new Date(advice.date), 'dd-MMM-yyyy')}
+                    {mounted ? format(new Date(advice.date), 'dd-MMM-yyyy') : '---'}
                   </TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(advice.totalAmount)}

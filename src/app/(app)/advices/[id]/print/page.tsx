@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -24,6 +24,11 @@ export default function PrintAdvicePage() {
   const companySealPlaceholder = PlaceHolderImages.find(p => p.id === 'company-seal');
 
   const { settings, isLoading: isLoadingSettings } = usePrintSettings();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const adviceRef = useMemo(() => {
     if (!firestore || !params.id) return null;
@@ -119,7 +124,7 @@ export default function PrintAdvicePage() {
             "print:p-0 print:m-0 print:shadow-none print:max-w-none print:mb-0"
           )}
         >
-          {/* Watermark Section - Centered and robust for both screen and print */}
+          {/* Watermark Section */}
           {watermarkEnabled && watermarkUrl && (
             <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.08] print:opacity-[0.1]">
               <div className="relative w-[600px] h-[600px] transform -rotate-30">
@@ -155,7 +160,7 @@ export default function PrintAdvicePage() {
                 <p><span className="font-semibold">Ref.No:</span> {advice.refNo}</p>
               </div>
               <div className="text-right">
-                <p><span className="font-semibold">Date:</span> {format(new Date(advice.date), 'dd-MMM-yyyy')}</p>
+                <p><span className="font-semibold">Date:</span> {mounted ? format(new Date(advice.date), 'dd-MMM-yyyy') : '---'}</p>
               </div>
             </div>
             
