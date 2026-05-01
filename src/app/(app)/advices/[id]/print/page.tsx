@@ -232,21 +232,21 @@ export default function PrintAdvicePage() {
               <div className="mt-3">
                 <table className="w-full border-collapse border border-black table-fixed text-[10px]">
                   <thead className="bg-gray-50">
-                    <tr className="border-b border-black">
-                      <th className="p-0.5 border-r border-black font-bold text-center align-middle h-[15pt]" style={{width: '4%'}}>SL</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '8%'}}>ID</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '24%'}}>Employee Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '16%'}}>Designation</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '12%'}}>Bank Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '12%'}}>Branch Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '12%'}}>A/C Number</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '6%'}}>Routing</th>
-                      <th className="p-0.5 text-right font-bold align-middle h-[15pt]" style={{width: '10%'}}>Amount</th>
+                    <tr className="border-b border-black h-[16pt]">
+                      <th className="p-0.5 border-r border-black font-bold text-center align-middle" style={{width: '4%'}}>SL</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '8%'}}>ID</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '24%'}}>Employee Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '16%'}}>Designation</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '12%'}}>Bank Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '12%'}}>Branch Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '12%'}}>A/C Number</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '6%'}}>Routing</th>
+                      <th className="p-0.5 text-right font-bold align-middle" style={{width: '10%'}}>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
                     {advice.employees.map((item, index) => (
-                      <tr key={item.employee.id} className="border-b border-black hover:bg-gray-50 h-[15pt]">
+                      <tr key={item.employee.id} className="border-b border-black hover:bg-gray-50 h-[16pt]">
                         <td className="p-0.5 border-r border-black text-center align-middle">{index + 1}</td>
                         <td className="p-0.5 border-r border-black font-mono align-middle">{item.employee.id}</td>
                         <td className="p-0.5 border-r border-black font-medium align-middle">{item.employee.name}</td>
@@ -259,15 +259,15 @@ export default function PrintAdvicePage() {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="border-t border-black font-bold bg-gray-50 h-[15pt]">
-                    <tr>
-                        <td className="p-0.5 border-r border-black text-center align-middle h-[15pt]" colSpan={2}>TOTAL</td>
-                        <td className="p-0.5 border-r border-black align-middle h-[15pt]" colSpan={6}>
+                  <tfoot className="border-t border-black font-bold bg-gray-50">
+                    <tr className="h-[16pt]">
+                        <td className="p-0.5 border-r border-black text-center align-middle" colSpan={2}>TOTAL</td>
+                        <td className="p-0.5 border-r border-black align-middle" colSpan={6}>
                           <span className="mr-2">Count: {advice.employees.length}</span>
                           <span className="mx-2">|</span>
                           <span className="ml-2">In Words: {amountToWords(advice.totalAmount)}</span>
                         </td>
-                        <td className="p-0.5 text-right font-mono text-[11px] align-middle h-[15pt]">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
+                        <td className="p-0.5 text-right font-mono text-[11px] align-middle">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
                     </tr>
                    </tfoot>
                 </table>
