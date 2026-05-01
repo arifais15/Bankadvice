@@ -25,16 +25,19 @@ export default function SettingsPage() {
   const firestore = useFirestore();
   const { settings, isLoading } = usePrintSettings();
   const [isSaving, setIsSaving] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const form = useForm<PrintSettings>({
     defaultValues: defaultSettings,
   });
 
+  // Only reset the form when settings are first loaded to avoid infinite loops and losing user input
   useEffect(() => {
-    if (settings) {
+    if (!isLoading && settings && !isInitialized) {
       form.reset(settings);
+      setIsInitialized(true);
     }
-  }, [settings, form]);
+  }, [isLoading, settings, isInitialized, form]);
 
   const onSubmit = async (data: PrintSettings) => {
     if (!firestore) return;
@@ -64,7 +67,7 @@ export default function SettingsPage() {
 
   const watchedValues = form.watch();
 
-  if (isLoading) {
+  if (isLoading && !isInitialized) {
     return (
         <div className="flex justify-center items-center h-96">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -133,7 +136,7 @@ export default function SettingsPage() {
                         <FormDescription>Display the company seal on printed documents.</FormDescription>
                       </div>
                       <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                       </FormControl>
                   </FormItem>
                 )}
@@ -201,7 +204,7 @@ export default function SettingsPage() {
                         <FormDescription>Display a watermark logo in the background of printed advices.</FormDescription>
                       </div>
                       <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                       </FormControl>
                   </FormItem>
                 )}
