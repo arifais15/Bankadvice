@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -8,23 +9,26 @@ import { format } from 'date-fns';
 import { formatCurrency, amountToWords } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { BankAdvice } from '@/types';
-import { Loader2, Printer, FileDown, ArrowLeft } from 'lucide-react';
+import { Loader2, Printer, FileDown, ArrowLeft, FileType } from 'lucide-react';
 import { useFirestore, useDoc } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { usePrintSettings } from '@/hooks/use-print-settings';
 import { Button } from '@/components/ui/button';
 import * as XLSX from 'xlsx';
 import { cn } from '@/lib/utils';
-
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function PrintAdvicePage() {
   const params = useParams();
   const firestore = useFirestore();
+  const adviceContentRef = useRef<HTMLDivElement>(null);
   const companyLogoPlaceholder = PlaceHolderImages.find(p => p.id === 'company-logo');
   const companySealPlaceholder = PlaceHolderImages.find(p => p.id === 'company-seal');
 
   const { settings, isLoading: isLoadingSettings } = usePrintSettings();
   const [mounted, setMounted] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -39,6 +43,39 @@ export default function PrintAdvicePage() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!advice || !adviceContentRef.current) return;
+    
+    setIsExportingPdf(true);
+    try {
+      const element = adviceContentRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2, // High DPI
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${advice.adviceNumber}.pdf`);
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+    } finally {
+      setIsExportingPdf(false);
+    }
   };
 
   const handleExportExcel = () => {
@@ -110,7 +147,11 @@ export default function PrintAdvicePage() {
             </Button>
             <Button variant="outline" onClick={handleExportExcel}>
                 <FileDown className="mr-2 h-4 w-4" />
-                Export to Excel
+                Export Excel
+            </Button>
+            <Button variant="outline" onClick={handleDownloadPdf} disabled={isExportingPdf}>
+                {isExportingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileType className="mr-2 h-4 w-4" />}
+                Download PDF
             </Button>
             <Button onClick={handlePrint}>
                 <Printer className="mr-2 h-4 w-4" />
@@ -119,6 +160,7 @@ export default function PrintAdvicePage() {
         </div>
         
         <div 
+          ref={adviceContentRef}
           className={cn(
             "relative p-12 max-w-7xl mx-auto font-serif bg-white text-black text-sm shadow-lg mb-8 min-h-[210mm]",
             "print:p-0 print:m-0 print:shadow-none print:max-w-none print:mb-0"
