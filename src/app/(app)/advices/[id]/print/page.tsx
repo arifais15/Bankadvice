@@ -50,14 +50,16 @@ export default function PrintAdvicePage() {
     setIsExportingPdf(true);
     try {
       const element = adviceContentRef.current;
+      // High-DPI capture with scale 3 for maximum sharpness
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        windowWidth: 1200, // Stabilize capture width
       });
       
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
@@ -68,7 +70,8 @@ export default function PrintAdvicePage() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      // Center the image if it's shorter than the page
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       pdf.save(`${advice.adviceNumber}.pdf`);
     } catch (error) {
       console.error('PDF generation failed:', error);
@@ -230,15 +233,15 @@ export default function PrintAdvicePage() {
                 <table className="w-full border-collapse border border-black table-fixed text-[10px]">
                   <thead className="bg-gray-50">
                     <tr className="border-b border-black">
-                      <th className="p-0.5 border-r border-black font-bold text-center align-middle" style={{width: '4%'}}>SL</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '8%'}}>ID</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '24%'}}>Employee Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '16%'}}>Designation</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '12%'}}>Bank Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '12%'}}>Branch Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '12%'}}>A/C Number</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '6%'}}>Routing</th>
-                      <th className="p-0.5 text-right font-bold align-middle" style={{width: '10%'}}>Amount</th>
+                      <th className="p-0.5 border-r border-black font-bold text-center align-middle h-[15pt]" style={{width: '4%'}}>SL</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '8%'}}>ID</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '24%'}}>Employee Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '16%'}}>Designation</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '12%'}}>Bank Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '12%'}}>Branch Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '12%'}}>A/C Number</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle h-[15pt]" style={{width: '6%'}}>Routing</th>
+                      <th className="p-0.5 text-right font-bold align-middle h-[15pt]" style={{width: '10%'}}>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -258,13 +261,13 @@ export default function PrintAdvicePage() {
                   </tbody>
                   <tfoot className="border-t border-black font-bold bg-gray-50 h-[15pt]">
                     <tr>
-                        <td className="p-0.5 border-r border-black text-center align-middle" colSpan={2}>TOTAL</td>
-                        <td className="p-0.5 border-r border-black align-middle" colSpan={6}>
+                        <td className="p-0.5 border-r border-black text-center align-middle h-[15pt]" colSpan={2}>TOTAL</td>
+                        <td className="p-0.5 border-r border-black align-middle h-[15pt]" colSpan={6}>
                           <span className="mr-2">Count: {advice.employees.length}</span>
                           <span className="mx-2">|</span>
                           <span className="ml-2">In Words: {amountToWords(advice.totalAmount)}</span>
                         </td>
-                        <td className="p-0.5 text-right font-mono text-[11px] align-middle">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
+                        <td className="p-0.5 text-right font-mono text-[11px] align-middle h-[15pt]">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
                     </tr>
                    </tfoot>
                 </table>
