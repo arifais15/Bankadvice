@@ -123,13 +123,16 @@ export function PayeesClient() {
   const handleDeleteEmployee = (employeeId: string) => {
     if (!firestore) return;
     const employeeRef = doc(firestore, 'employees', employeeId);
+    
+    // Non-blocking delete
     deleteDoc(employeeRef).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: employeeRef.path,
         operation: 'delete',
       }));
     });
-    toast({ title: "Employee Deleted", description: "The employee has been removed from the registry." });
+    
+    toast({ title: "Employee Deleted", description: "The employee record removal has been initiated." });
   };
 
   const onSubmit = async (formData: EmployeeFormValues) => {
@@ -138,24 +141,23 @@ export function PayeesClient() {
     
     const employeeRef = doc(firestore, 'employees', formData.id);
     
+    // Non-blocking write for instant UI feedback
     setDoc(employeeRef, formData, { merge: true })
-      .then(() => {
-        toast({
-          title: editingEmployee ? 'Employee Updated' : 'Employee Added',
-          description: `${formData.name}'s details have been saved to Firestore.`,
-        });
-        setIsFormOpen(false);
-      })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: employeeRef.path,
           operation: 'write',
           requestResourceData: formData,
         }));
-      })
-      .finally(() => {
-        setIsSubmitting(false);
       });
+
+    toast({
+      title: editingEmployee ? 'Employee Updated' : 'Employee Added',
+      description: `${formData.name}'s details have been saved.`,
+    });
+    
+    setIsFormOpen(false);
+    setIsSubmitting(false);
   };
   
   const handleDownloadTemplate = () => {
@@ -182,7 +184,6 @@ export function PayeesClient() {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
-        // Convert to array of objects
         const json = XLSX.utils.sheet_to_json(worksheet);
         
         if (json.length === 0) {
@@ -206,7 +207,6 @@ export function PayeesClient() {
         let processedCount = 0;
 
         json.forEach((row: any) => {
-            // Clean and transform data, ensuring IDs and numbers from Excel are strings
             const cleanedData: any = {};
             expectedHeaders.forEach(header => {
                 cleanedData[header] = row[header] !== undefined ? String(row[header]).trim() : '';
@@ -229,7 +229,7 @@ export function PayeesClient() {
         
         toast({
             title: 'Import Started',
-            description: `Processing ${processedCount} valid records. Changes will appear shortly.`,
+            description: `Processing ${processedCount} records. Changes will appear instantly in the list.`,
         });
         setIsBulkUploadOpen(false);
 
@@ -290,7 +290,6 @@ export function PayeesClient() {
                     <TableCell className="font-mono">{employee.accountNumber}</TableCell>
                     <TableCell className="font-mono">{employee.routing}</TableCell>
                     <TableCell className="text-right">
-                       <AlertDialog>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon">
@@ -301,29 +300,30 @@ export function PayeesClient() {
                             <DropdownMenuItem onClick={() => handleOpenForm(employee)}>
                               <Edit className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                  </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete the
+                                      employee record for "{employee.name}".
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>
+                                      Continue
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the
-                              employee record for "{employee.name}".
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>
-                              Continue
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
                     </TableCell>
                   </TableRow>
                 ))

@@ -31,7 +31,6 @@ export default function SettingsPage() {
     defaultValues: defaultSettings,
   });
 
-  // Only reset the form when settings are first loaded to avoid infinite loops and losing user input
   useEffect(() => {
     if (!isLoading && settings && !isInitialized) {
       form.reset(settings);
@@ -45,13 +44,8 @@ export default function SettingsPage() {
     
     const settingsRef = doc(firestore, 'settings', 'print');
     
+    // Non-blocking write
     setDoc(settingsRef, data, { merge: true })
-      .then(() => {
-        toast({
-          title: 'Settings Saved',
-          description: 'Your print settings have been updated in Firestore.',
-        });
-      })
       .catch(async (error) => {
         const permissionError = new FirestorePermissionError({
           path: settingsRef.path,
@@ -59,10 +53,14 @@ export default function SettingsPage() {
           requestResourceData: data,
         });
         errorEmitter.emit('permission-error', permissionError);
-      })
-      .finally(() => {
-        setIsSaving(false);
       });
+
+    toast({
+      title: 'Settings Saved',
+      description: 'Your print settings have been updated.',
+    });
+    
+    setIsSaving(false);
   };
 
   const watchedValues = form.watch();
@@ -92,7 +90,7 @@ export default function SettingsPage() {
           <Info className="h-4 w-4" />
           <AlertTitle>Cloud Persistence</AlertTitle>
           <AlertDescription>
-            Settings are now saved directly to Firestore. Changes will reflect across all devices instantly.
+            Settings are saved to Firestore. Changes reflect instantly using local caching.
           </AlertDescription>
         </Alert>
 

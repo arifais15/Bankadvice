@@ -210,40 +210,35 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
   const onSubmit = async (data: AdviceFormValues) => {
     if (!firestore) return;
     setIsSubmitting(true);
-    try {
-      const adviceId = isEditMode && adviceToEdit ? adviceToEdit.id : generateAdviceNumber();
-      const adviceRef = doc(firestore, 'advices', adviceId);
-      
-      const payload: BankAdvice = {
-        ...data,
-        id: adviceId,
-        adviceNumber: adviceId,
-        date: data.date.toISOString(),
-        totalAmount,
-        status: adviceToEdit?.status || 'Draft',
-      };
+    
+    const adviceId = isEditMode && adviceToEdit ? adviceToEdit.id : generateAdviceNumber();
+    const adviceRef = doc(firestore, 'advices', adviceId);
+    
+    const payload: BankAdvice = {
+      ...data,
+      id: adviceId,
+      adviceNumber: adviceId,
+      date: data.date.toISOString(),
+      totalAmount,
+      status: adviceToEdit?.status || 'Draft',
+    };
 
-      setDoc(adviceRef, payload, { merge: true })
-        .then(() => {
-          toast({
-            title: isEditMode ? 'Advice Updated' : 'Advice Created',
-            description: `Advice ${adviceId} has been synced to Firestore.`,
-          });
-          router.push('/advices');
-        })
-        .catch(async (error) => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: adviceRef.path,
-            operation: 'write',
-            requestResourceData: payload,
-          }));
-        })
-        .finally(() => setIsSubmitting(false));
+    // Optimistic Update: Do not await. Proceed to UI feedback immediately.
+    setDoc(adviceRef, payload, { merge: true })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: adviceRef.path,
+          operation: 'write',
+          requestResourceData: payload,
+        }));
+      });
 
-    } catch (error) {
-      console.error(error);
-      setIsSubmitting(false);
-    }
+    toast({
+      title: isEditMode ? 'Advice Updated' : 'Advice Created',
+      description: `Advice ${adviceId} has been saved.`,
+    });
+    
+    router.push('/advices');
   };
 
   return (
