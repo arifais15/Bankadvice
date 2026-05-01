@@ -239,15 +239,15 @@ export default function PrintAdvicePage() {
                 <table className="w-full border-collapse border border-black table-fixed text-[13px] leading-none">
                   <thead className="bg-gray-50">
                     <tr className="border-b border-black">
-                      <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '4%' }}>SL</th>
-                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '8%' }}>ID</th>
-                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '24%' }}>Employee Name</th>
-                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '16%' }}>Designation</th>
+                      <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '3%' }}>SL</th>
+                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '7%' }}>ID</th>
+                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '25%' }}>Employee Name</th>
+                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '15%' }}>Designation</th>
                       <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '12%' }}>Bank Name</th>
                       <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '12%' }}>Branch Name</th>
-                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '12%' }}>A/C Number</th>
-                      <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '6%' }}>Routing</th>
-                      <th className="text-right font-bold pr-1" style={{ ...cellStyle, width: '10%' }}>Amount</th>
+                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '14%' }}>A/C Number</th>
+                      <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '5%' }}>Routing</th>
+                      <th className="text-right font-bold pr-1" style={{ ...cellStyle, width: '7%' }}>Amount</th>
                     </tr>
                   </thead>
                   <tbody className="text-black">
