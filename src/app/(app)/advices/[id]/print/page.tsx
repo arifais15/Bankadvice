@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useState, useRef } from 'react';
@@ -161,9 +160,10 @@ export default function PrintAdvicePage() {
         <div 
           ref={adviceContentRef}
           className={cn(
-            "relative p-10 max-w-[297mm] mx-auto font-serif bg-white text-black text-xs shadow-lg mb-8",
+            "relative p-12 max-w-[297mm] mx-auto font-serif bg-white text-black shadow-lg mb-8",
             "print:p-0 print:m-0 print:shadow-none print:max-w-none print:mb-0"
           )}
+          style={{ color: '#000000' }}
         >
           {/* Watermark Section */}
           {watermarkEnabled && watermarkUrl && (
@@ -186,61 +186,61 @@ export default function PrintAdvicePage() {
                   {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={85} height={85} unoptimized className="object-contain" />}
                 </div>
                 <div className="text-center">
-                  <h1 className="text-2xl font-bold font-nikosh leading-tight">{headerSettings.headerLine1}</h1>
-                  <h2 className="text-xl font-bold leading-tight">{headerSettings.headerLine2}</h2>
+                  <h1 className="text-2xl font-bold font-nikosh leading-tight text-black">{headerSettings.headerLine1}</h1>
+                  <h2 className="text-xl font-bold leading-tight text-black">{headerSettings.headerLine2}</h2>
                 </div>
                 <div className="text-right flex flex-col items-end gap-0.5">
                   {sealEnabled && finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={65} height={65} unoptimized className="opacity-80 object-contain mb-1" />}
-                  <p className="text-[11px] font-nikosh leading-tight font-bold">{headerSettings.headerLine3}</p>
+                  <p className="text-[12px] font-nikosh leading-tight font-bold text-black">{headerSettings.headerLine3}</p>
                   {contactLines.map((line, i) => (
-                    <p key={i} className="text-[10px] font-nikosh leading-tight text-gray-800">{line}</p>
+                    <p key={i} className="text-[11px] font-nikosh leading-tight text-black">{line}</p>
                   ))}
                 </div>
             </header>
 
-            <div className="flex justify-between items-baseline mt-2 text-[11px]">
+            <div className="flex justify-between items-baseline mt-3 text-[12px]">
               <div className="flex items-center gap-1">
-                <span className="font-bold">Ref.No:</span> <span>{advice.refNo}</span>
+                <span className="font-bold">Ref.No:</span> <span className="text-black">{advice.refNo}</span>
               </div>
               <div className="flex items-center">
-                <p><span className="font-bold">Date:</span> {mounted ? format(new Date(advice.date), 'dd-MMM-yyyy') : '---'}</p>
+                <p><span className="font-bold">Date:</span> <span className="text-black">{mounted ? format(new Date(advice.date), 'dd-MMM-yyyy') : '---'}</span></p>
               </div>
             </div>
 
             <main className="mt-2">
-              <div className="flex justify-between items-end border-b border-gray-100 pb-0.5">
-                <div className="text-[11px]">
-                    <p className='font-bold'>Manager</p>
-                    <p>{advice.bankName}, {advice.bankBranch}</p>
+              <div className="flex justify-between items-end border-b border-gray-200 pb-0.5">
+                <div className="text-[12px]">
+                    <p className='font-bold text-black'>Manager</p>
+                    <p className="text-black">{advice.bankName}, {advice.bankBranch}</p>
                 </div>
                 <div className="text-right">
-                    <p className="font-bold text-[11px]">Advice No: {advice.adviceNumber}</p>
+                    <p className="font-bold text-[12px] text-black">Advice No: {advice.adviceNumber}</p>
                 </div>
               </div>
               
-              <p className="mt-3 font-bold text-[11px] underline">Subject: {advice.subject}</p>
+              <p className="mt-4 font-bold text-[12px] underline text-black">Subject: {advice.subject}</p>
 
-              <p className="mt-2 leading-tight text-justify text-[11px]">
+              <p className="mt-3 leading-tight text-justify text-[12px] text-black">
                 You are requested to debit our Account No. <span className="font-bold">{advice.debitAccount}</span> by an amount of <span className="font-bold">{formatCurrency(advice.totalAmount)}</span>
                 ( <span className="font-bold">{amountToWords(advice.totalAmount)}</span> ). The amount is to be transferred via BEFTN to employees' personal savings accounts as per the list provided below.
               </p>
               
-              <div className="mt-3">
-                <table className="w-full border-collapse border border-black table-fixed text-[10px]">
+              <div className="mt-4">
+                <table className="w-full border-collapse border border-black table-fixed text-[11px]">
                   <thead className="bg-gray-50">
                     <tr className="border-b border-black h-[16pt]">
-                      <th className="p-0.5 border-r border-black font-bold text-center align-middle" style={{width: '4%'}}>SL</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1" style={{width: '8%'}}>ID</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1" style={{width: '24%'}}>Employee Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1" style={{width: '16%'}}>Designation</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1" style={{width: '12%'}}>Bank Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1" style={{width: '12%'}}>Branch Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1" style={{width: '12%'}}>A/C Number</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle text-center" style={{width: '6%'}}>Routing</th>
-                      <th className="p-0.5 text-right font-bold align-middle pr-1" style={{width: '10%'}}>Amount</th>
+                      <th className="p-0.5 border-r border-black font-bold text-center align-middle text-black" style={{width: '4%'}}>SL</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1 text-black" style={{width: '8%'}}>ID</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1 text-black" style={{width: '24%'}}>Employee Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1 text-black" style={{width: '16%'}}>Designation</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1 text-black" style={{width: '12%'}}>Bank Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1 text-black" style={{width: '12%'}}>Branch Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1 text-black" style={{width: '12%'}}>A/C Number</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle text-center text-black" style={{width: '6%'}}>Routing</th>
+                      <th className="p-0.5 text-right font-bold align-middle pr-1 text-black" style={{width: '10%'}}>Amount</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-black">
                     {advice.employees.map((item, index) => (
                       <tr key={item.employee.id} className="border-b border-black h-[16pt]">
                         <td className="p-0 border-r border-black text-center align-middle">{index + 1}</td>
@@ -255,32 +255,32 @@ export default function PrintAdvicePage() {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="border-t border-black font-bold">
-                    <tr className="h-[16pt]">
+                  <tfoot className="border-t border-black font-bold text-black">
+                    <tr className="h-[18pt]">
                         <td className="p-0.5 border-r border-black text-center align-middle" colSpan={2}>TOTAL</td>
                         <td className="p-0.5 border-r border-black align-middle pl-2" colSpan={6}>
                           <span className="mr-2">Count: {advice.employees.length}</span>
                           <span className="mx-2 font-normal">|</span>
                           <span className="ml-2">In Words: {amountToWords(advice.totalAmount)}</span>
                         </td>
-                        <td className="p-0.5 text-right font-mono text-[11px] align-middle pr-1">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
+                        <td className="p-0.5 text-right font-mono text-[12px] align-middle pr-1">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
                     </tr>
                    </tfoot>
                 </table>
               </div>
             </main>
 
-            <footer className="mt-24 grid grid-cols-2 gap-40 text-center text-[11px] pb-10">
+            <footer className="mt-28 grid grid-cols-2 gap-40 text-center text-[12px] pb-12">
                 <div className="flex flex-col items-center">
                     <div className="border-t border-black w-full pt-1">
-                      <p className="font-bold">AGM Finance</p>
-                      <p className="text-[10px]">Gazipur Palli Bidyut Samity-2</p>
+                      <p className="font-bold text-black">AGM Finance</p>
+                      <p className="text-[11px] text-black">Gazipur Palli Bidyut Samity-2</p>
                     </div>
                 </div>
                 <div className="flex flex-col items-center">
                     <div className="border-t border-black w-full pt-1">
-                      <p className="font-bold">Senior General Manager</p>
-                      <p className="text-[10px]">Gazipur Palli Bidyut Samity-2</p>
+                      <p className="font-bold text-black">Senior General Manager</p>
+                      <p className="text-[11px] text-black">Gazipur Palli Bidyut Samity-2</p>
                     </div>
                 </div>
             </footer>
