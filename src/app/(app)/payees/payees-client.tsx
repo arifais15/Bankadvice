@@ -173,64 +173,78 @@ export function PayeesClient() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const data = event.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
+        if (!data) return;
+
+        const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
-        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        // Convert to array of objects
+        const json = XLSX.utils.sheet_to_json(worksheet);
         
-        const headers = (json[0] as string[]).map(h => h.toLowerCase());
-        const expectedHeaders = ['id', 'name', 'designation', 'bankName', 'branch', 'accountNumber', 'routing'];
-        
-        if(JSON.stringify(headers) !== JSON.stringify(expectedHeaders)) {
-            toast({ variant: 'destructive', title: 'Invalid Headers', description: 'File headers do not match the template. Please download a new template.' });
+        if (json.length === 0) {
+            toast({ variant: 'destructive', title: 'Empty File', description: 'No data found in the uploaded file.' });
             return;
         }
 
-        const rows = json.slice(1) as any[][];
-        const batchPromises: Promise<void>[] = [];
+        const expectedHeaders = ['id', 'name', 'designation', 'bankName', 'branch', 'accountNumber', 'routing'];
+        const firstRowKeys = Object.keys(json[0] as object).map(k => k.trim());
+        const missingHeaders = expectedHeaders.filter(h => !firstRowKeys.includes(h));
 
-        rows.forEach((row) => {
-            const rowData: any = {};
-            expectedHeaders.forEach((header, i) => {
-                rowData[header] = row[i] !== undefined ? String(row[i]) : '';
+        if (missingHeaders.length > 0) {
+            toast({ 
+                variant: 'destructive', 
+                title: 'Invalid Headers', 
+                description: `Missing columns: ${missingHeaders.join(', ')}. Please use the template.` 
+            });
+            return;
+        }
+
+        let processedCount = 0;
+
+        json.forEach((row: any) => {
+            // Clean and transform data
+            const cleanedData: any = {};
+            expectedHeaders.forEach(header => {
+                cleanedData[header] = row[header] !== undefined ? String(row[header]).trim() : '';
             });
 
-            const result = employeeSchema.safeParse(rowData);
-            if (result.success) {
-                const employeeRef = doc(firestore!, 'employees', result.data.id);
-                batchPromises.push(setDoc(employeeRef, result.data, { merge: true }));
+            const validation = employeeSchema.safeParse(cleanedData);
+            if (validation.success) {
+                const employeeRef = doc(firestore, 'employees', validation.data.id);
+                setDoc(employeeRef, validation.data, { merge: true })
+                    .catch(async (error) => {
+                        errorEmitter.emit('permission-error', new FirestorePermissionError({
+                            path: employeeRef.path,
+                            operation: 'write',
+                            requestResourceData: validation.data,
+                        }));
+                    });
+                processedCount++;
             }
         });
         
-        Promise.all(batchPromises)
-          .then(() => {
-            toast({
-              title: 'Upload Successful',
-              description: `${batchPromises.length} employees have been processed and synced.`,
-            });
-            setIsBulkUploadOpen(false);
-          })
-          .catch((error) => {
-            console.error(error);
-            toast({ variant: 'destructive', title: 'Partial Failure', description: 'Some employees could not be saved. Check permissions.' });
-          });
+        toast({
+            title: 'Import Started',
+            description: `Processing ${processedCount} valid records. Changes will appear shortly.`,
+        });
+        setIsBulkUploadOpen(false);
 
       } catch (error) {
         console.error(error);
         toast({
             variant: 'destructive',
             title: 'Upload Failed',
-            description: 'Could not parse the file. Ensure it is a valid .xlsx file and matches the template.',
+            description: 'Could not parse the file. Ensure it is a valid .xlsx or .xls file.',
         });
       } finally {
         if (e.target) e.target.value = '';
       }
     };
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   };
 
   return (
