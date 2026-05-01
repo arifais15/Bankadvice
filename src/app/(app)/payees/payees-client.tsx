@@ -28,7 +28,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -57,6 +56,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
 const employeeSchema = z.object({
@@ -206,7 +206,7 @@ export function PayeesClient() {
         let processedCount = 0;
 
         json.forEach((row: any) => {
-            // Clean and transform data
+            // Clean and transform data, ensuring IDs and numbers from Excel are strings
             const cleanedData: any = {};
             expectedHeaders.forEach(header => {
                 cleanedData[header] = row[header] !== undefined ? String(row[header]).trim() : '';
@@ -301,11 +301,11 @@ export function PayeesClient() {
                             <DropdownMenuItem onClick={() => handleOpenForm(employee)}>
                               <Edit className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
-                            <DialogTrigger asChild>
+                            <AlertDialogTrigger asChild>
                               <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
                               </DropdownMenuItem>
-                            </DialogTrigger>
+                            </AlertDialogTrigger>
                           </DropdownMenuContent>
                         </DropdownMenu>
                         <AlertDialogContent>
