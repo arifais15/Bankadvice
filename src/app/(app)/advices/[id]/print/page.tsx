@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useState, useRef } from 'react';
@@ -182,18 +181,18 @@ export default function PrintAdvicePage() {
           )}
 
           <div className="relative z-10">
-             <header className="grid grid-cols-[1.2fr_2.5fr_1fr] items-center gap-4 pb-4 font-sans border-b-2 border-black">
-                <div className="flex flex-col items-start justify-center text-left">
-                  {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={85} height={85} unoptimized className="object-contain mb-2" />}
-                  <p className="text-[11px] font-nikosh leading-tight text-gray-800">{headerSettings.headerLine3}</p>
-                  <p className="text-[10px] font-nikosh leading-tight text-gray-700">{headerSettings.headerLine4}</p>
+             <header className="grid grid-cols-[1fr_2.5fr_1.2fr] items-start gap-4 pb-4 font-sans border-b-2 border-black">
+                <div className="flex justify-start">
+                  {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={90} height={90} unoptimized className="object-contain" />}
                 </div>
                 <div className="text-center">
                   <h1 className="text-3xl font-bold font-nikosh leading-tight">{headerSettings.headerLine1}</h1>
                   <h2 className="text-2xl font-semibold leading-tight">{headerSettings.headerLine2}</h2>
                 </div>
-                <div className="flex items-center justify-end">
-                  {sealEnabled && finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={85} height={85} unoptimized className="opacity-80 object-contain" />}
+                <div className="text-right flex flex-col items-end">
+                  {sealEnabled && finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={80} height={80} unoptimized className="opacity-80 object-contain mb-1" />}
+                  <p className="text-[12px] font-nikosh leading-tight text-gray-900">{headerSettings.headerLine3}</p>
+                  <p className="text-[11px] font-nikosh leading-tight text-gray-800">{headerSettings.headerLine4}</p>
                 </div>
             </header>
 
