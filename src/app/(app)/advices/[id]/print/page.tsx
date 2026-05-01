@@ -204,17 +204,21 @@ export default function PrintAdvicePage() {
               <div className="flex items-center gap-1">
                 <span className="font-semibold">Ref.No:</span> <span>{advice.refNo}</span>
               </div>
-              <div className="flex items-center gap-4">
-                <p className="font-bold">Advice No: {advice.adviceNumber}</p>
+              <div className="flex items-center">
                 <p><span className="font-semibold">Date:</span> {mounted ? format(new Date(advice.date), 'dd-MMM-yyyy') : '---'}</p>
               </div>
             </div>
 
             <main className="mt-4">
-              <div className="space-y-0.5 text-sm">
-                  <p className='font-bold'>The Manager</p>
-                  <p>{advice.bankName}</p>
-                  <p>{advice.bankBranch}</p>
+              <div className="flex justify-between items-start">
+                <div className="space-y-0.5 text-sm">
+                    <p className='font-bold'>The Manager</p>
+                    <p>{advice.bankName}</p>
+                    <p>{advice.bankBranch}</p>
+                </div>
+                <div className="text-right">
+                    <p className="font-bold">Advice No: {advice.adviceNumber}</p>
+                </div>
               </div>
               
               <p className="mt-3 font-bold text-sm border-b border-black inline-block pb-0.5">Subject: {advice.subject}</p>
