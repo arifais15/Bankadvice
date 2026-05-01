@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useEffect, useState, useRef } from 'react';
@@ -23,7 +24,6 @@ export default function PrintAdvicePage() {
   const firestore = useFirestore();
   const adviceContentRef = useRef<HTMLDivElement>(null);
   const companyLogoPlaceholder = PlaceHolderImages.find(p => p.id === 'company-logo');
-  const companySealPlaceholder = PlaceHolderImages.find(p => p.id === 'company-seal');
 
   const { settings, isLoading: isLoadingSettings } = usePrintSettings();
   const [mounted, setMounted] = useState(false);
@@ -50,13 +50,11 @@ export default function PrintAdvicePage() {
     setIsExportingPdf(true);
     try {
       const element = adviceContentRef.current;
-      // High-DPI capture with scale 3 for maximum sharpness
       const canvas = await html2canvas(element, {
-        scale: 3,
+        scale: 3, // High DPI
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
-        windowWidth: 1200, // Stabilize capture width
       });
       
       const imgData = canvas.toDataURL('image/png', 1.0);
@@ -66,11 +64,9 @@ export default function PrintAdvicePage() {
         format: 'a4'
       });
       
-      const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
-      // Center the image if it's shorter than the page
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       pdf.save(`${advice.adviceNumber}.pdf`);
     } catch (error) {
@@ -125,7 +121,7 @@ export default function PrintAdvicePage() {
   }
   
   const finalLogoUrl = settings?.companyLogoUrl || companyLogoPlaceholder?.imageUrl;
-  const finalSealUrl = settings?.companySealUrl || companySealPlaceholder?.imageUrl;
+  const finalSealUrl = settings?.companySealUrl;
   const sealEnabled = settings?.companySealEnabled;
   const watermarkEnabled = settings?.watermarkEnabled || false;
   const watermarkUrl = settings?.watermarkUrl || settings?.companyLogoUrl || companyLogoPlaceholder?.imageUrl;
@@ -165,14 +161,14 @@ export default function PrintAdvicePage() {
         <div 
           ref={adviceContentRef}
           className={cn(
-            "relative p-8 max-w-7xl mx-auto font-serif bg-white text-black text-xs shadow-lg mb-8 min-h-[210mm]",
+            "relative p-10 max-w-[297mm] mx-auto font-serif bg-white text-black text-xs shadow-lg mb-8",
             "print:p-0 print:m-0 print:shadow-none print:max-w-none print:mb-0"
           )}
         >
           {/* Watermark Section */}
           {watermarkEnabled && watermarkUrl && (
             <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.08] print:opacity-[0.1]">
-              <div className="relative w-[500px] h-[500px] transform -rotate-30">
+              <div className="relative w-[550px] h-[550px]">
                 <Image
                   src={watermarkUrl}
                   alt="Watermark"
@@ -185,24 +181,24 @@ export default function PrintAdvicePage() {
           )}
 
           <div className="relative z-10">
-             <header className="grid grid-cols-3 items-start pb-2 font-sans border-b-2 border-black">
-                <div className="flex flex-col items-start gap-1">
-                  {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={70} height={70} unoptimized className="object-contain" />}
+             <header className="grid grid-cols-3 items-start pb-2 font-sans border-b border-black">
+                <div className="flex flex-col items-start">
+                  {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={85} height={85} unoptimized className="object-contain" />}
                 </div>
                 <div className="text-center">
-                  <h1 className="text-xl font-bold font-nikosh leading-tight">{headerSettings.headerLine1}</h1>
-                  <h2 className="text-lg font-semibold leading-tight">{headerSettings.headerLine2}</h2>
+                  <h1 className="text-2xl font-bold font-nikosh leading-tight">{headerSettings.headerLine1}</h1>
+                  <h2 className="text-xl font-bold leading-tight">{headerSettings.headerLine2}</h2>
                 </div>
                 <div className="text-right flex flex-col items-end gap-0.5">
-                  {sealEnabled && finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={60} height={60} unoptimized className="opacity-80 object-contain mb-1" />}
-                  <p className="text-[10px] font-nikosh leading-tight font-bold">{headerSettings.headerLine3}</p>
+                  {sealEnabled && finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={65} height={65} unoptimized className="opacity-80 object-contain mb-1" />}
+                  <p className="text-[11px] font-nikosh leading-tight font-bold">{headerSettings.headerLine3}</p>
                   {contactLines.map((line, i) => (
-                    <p key={i} className="text-[9px] font-nikosh leading-tight text-gray-800">{line}</p>
+                    <p key={i} className="text-[10px] font-nikosh leading-tight text-gray-800">{line}</p>
                   ))}
                 </div>
             </header>
 
-            <div className="flex justify-between items-baseline mt-1 text-[11px]">
+            <div className="flex justify-between items-baseline mt-2 text-[11px]">
               <div className="flex items-center gap-1">
                 <span className="font-bold">Ref.No:</span> <span>{advice.refNo}</span>
               </div>
@@ -222,11 +218,11 @@ export default function PrintAdvicePage() {
                 </div>
               </div>
               
-              <p className="mt-2 font-bold text-[11px] underline">Subject: {advice.subject}</p>
+              <p className="mt-3 font-bold text-[11px] underline">Subject: {advice.subject}</p>
 
               <p className="mt-2 leading-tight text-justify text-[11px]">
                 You are requested to debit our Account No. <span className="font-bold">{advice.debitAccount}</span> by an amount of <span className="font-bold">{formatCurrency(advice.totalAmount)}</span>
-                ( {amountToWords(advice.totalAmount)} ). The amount is to be transferred via BEFTN to employees' personal savings accounts as per the list provided below.
+                ( <span className="font-bold">{amountToWords(advice.totalAmount)}</span> ). The amount is to be transferred via BEFTN to employees' personal savings accounts as per the list provided below.
               </p>
               
               <div className="mt-3">
@@ -234,47 +230,47 @@ export default function PrintAdvicePage() {
                   <thead className="bg-gray-50">
                     <tr className="border-b border-black h-[16pt]">
                       <th className="p-0.5 border-r border-black font-bold text-center align-middle" style={{width: '4%'}}>SL</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '8%'}}>ID</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '24%'}}>Employee Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '16%'}}>Designation</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '12%'}}>Bank Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '12%'}}>Branch Name</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '12%'}}>A/C Number</th>
-                      <th className="p-0.5 border-r border-black font-bold align-middle" style={{width: '6%'}}>Routing</th>
-                      <th className="p-0.5 text-right font-bold align-middle" style={{width: '10%'}}>Amount</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1" style={{width: '8%'}}>ID</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1" style={{width: '24%'}}>Employee Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1" style={{width: '16%'}}>Designation</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1" style={{width: '12%'}}>Bank Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1" style={{width: '12%'}}>Branch Name</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle pl-1" style={{width: '12%'}}>A/C Number</th>
+                      <th className="p-0.5 border-r border-black font-bold align-middle text-center" style={{width: '6%'}}>Routing</th>
+                      <th className="p-0.5 text-right font-bold align-middle pr-1" style={{width: '10%'}}>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
                     {advice.employees.map((item, index) => (
-                      <tr key={item.employee.id} className="border-b border-black hover:bg-gray-50 h-[16pt]">
-                        <td className="p-0.5 border-r border-black text-center align-middle">{index + 1}</td>
-                        <td className="p-0.5 border-r border-black font-mono align-middle">{item.employee.id}</td>
-                        <td className="p-0.5 border-r border-black font-medium align-middle">{item.employee.name}</td>
-                        <td className="p-0.5 border-r border-black align-middle">{item.employee.designation}</td>
-                        <td className="p-0.5 border-r border-black align-middle">{item.employee.bankName}</td>
-                        <td className="p-0.5 border-r border-black align-middle">{item.employee.branch}</td>
-                        <td className="p-0.5 border-r border-black font-mono align-middle">{item.employee.accountNumber}</td>
-                        <td className="p-0.5 border-r border-black font-mono align-middle">{item.employee.routing}</td>
-                        <td className="p-0.5 text-right font-mono font-semibold align-middle">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(item.netPayment)}</td>
+                      <tr key={item.employee.id} className="border-b border-black h-[16pt]">
+                        <td className="p-0 border-r border-black text-center align-middle">{index + 1}</td>
+                        <td className="p-0 border-r border-black font-mono align-middle pl-1">{item.employee.id}</td>
+                        <td className="p-0 border-r border-black font-medium align-middle pl-1">{item.employee.name}</td>
+                        <td className="p-0 border-r border-black align-middle pl-1">{item.employee.designation}</td>
+                        <td className="p-0 border-r border-black align-middle pl-1">{item.employee.bankName}</td>
+                        <td className="p-0 border-r border-black align-middle pl-1">{item.employee.branch}</td>
+                        <td className="p-0 border-r border-black font-mono align-middle pl-1">{item.employee.accountNumber}</td>
+                        <td className="p-0 border-r border-black font-mono align-middle text-center">{item.employee.routing}</td>
+                        <td className="p-0 text-right font-mono font-bold align-middle pr-1">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(item.netPayment)}</td>
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="border-t border-black font-bold bg-gray-50">
+                  <tfoot className="border-t border-black font-bold">
                     <tr className="h-[16pt]">
                         <td className="p-0.5 border-r border-black text-center align-middle" colSpan={2}>TOTAL</td>
-                        <td className="p-0.5 border-r border-black align-middle" colSpan={6}>
+                        <td className="p-0.5 border-r border-black align-middle pl-2" colSpan={6}>
                           <span className="mr-2">Count: {advice.employees.length}</span>
-                          <span className="mx-2">|</span>
+                          <span className="mx-2 font-normal">|</span>
                           <span className="ml-2">In Words: {amountToWords(advice.totalAmount)}</span>
                         </td>
-                        <td className="p-0.5 text-right font-mono text-[11px] align-middle">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
+                        <td className="p-0.5 text-right font-mono text-[11px] align-middle pr-1">{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(advice.totalAmount)}</td>
                     </tr>
                    </tfoot>
                 </table>
               </div>
             </main>
 
-            <footer className="mt-16 grid grid-cols-2 gap-20 text-center text-[11px] pb-4">
+            <footer className="mt-24 grid grid-cols-2 gap-40 text-center text-[11px] pb-10">
                 <div className="flex flex-col items-center">
                     <div className="border-t border-black w-full pt-1">
                       <p className="font-bold">AGM Finance</p>
