@@ -10,4 +10,8 @@ export const printSettings: PrintSettings = {
   headerLine2: 'Gazipur Palli Bidyut Samity-2',
   headerLine3: 'সদর দপ্তর, রাজেন্দ্রপুর, গাজীপুর',
   headerLine4: 'টেলিফোন: ০২-৯২০১৭৮৩, E-mail: gazipbs2@gmail.com',
+  signatory1Name: '',
+  signatory1Designation: 'AGM Finance',
+  signatory2Name: '',
+  signatory2Designation: 'Senior General Manager',
 };

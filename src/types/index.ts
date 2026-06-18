@@ -40,4 +40,8 @@ export type PrintSettings = {
   headerLine2?: string;
   headerLine3?: string;
   headerLine4?: string;
+  signatory1Name?: string;
+  signatory1Designation?: string;
+  signatory2Name?: string;
+  signatory2Designation?: string;
 };

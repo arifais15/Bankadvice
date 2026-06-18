@@ -50,7 +50,7 @@ export default function PrintAdvicePage() {
     try {
       const element = adviceContentRef.current;
       const canvas = await html2canvas(element, {
-        scale: 4, // High resolution for sharp text
+        scale: 4, 
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
@@ -80,7 +80,7 @@ export default function PrintAdvicePage() {
     if (!advice) return;
 
     const header = [
-      "SL", "ID", "Name", "Designation", "Bank_Name", "Branch_Name", "AccountNumber", "Routing", "NetPay"
+      "SL", "ID", "Name", "Designation", "Bank_Name", "Branch_Name", "AccountNumber", "Routing", "Amount"
     ];
 
     const dataForExcel = advice.employees.map((item, index) => ([
@@ -96,7 +96,7 @@ export default function PrintAdvicePage() {
     ]));
 
     const totalRow = [
-      'Total :', advice.employees.length, 'In Words :', amountToWords(advice.totalAmount), '', '', '', 'GrandTotal', advice.totalAmount
+      'TOTAL', advice.employees.length, 'In Words:', amountToWords(advice.totalAmount), '', '', '', '', advice.totalAmount
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet([header, ...dataForExcel, [], totalRow]);
@@ -135,7 +135,6 @@ export default function PrintAdvicePage() {
 
   const contactLines = headerSettings.headerLine4.split(',').map(l => l.trim()).filter(Boolean);
 
-  // Common cell style for 22pt rows with centered text
   const cellStyle: React.CSSProperties = {
     height: '22pt',
     lineHeight: '22pt',
@@ -175,7 +174,6 @@ export default function PrintAdvicePage() {
           )}
           style={{ color: '#000000' }}
         >
-          {/* Watermark Section */}
           {watermarkEnabled && watermarkUrl && (
             <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.08] print:opacity-[0.1]">
               <div className="relative w-[550px] h-[550px]">
@@ -283,14 +281,16 @@ export default function PrintAdvicePage() {
             <footer className="mt-28 grid grid-cols-2 gap-40 text-center text-[15px] pb-12">
                 <div className="flex flex-col items-center">
                     <div className="border-t border-black w-full pt-1">
-                      <p className="font-bold text-black">AGM Finance</p>
-                      <p className="text-[14px] text-black">Gazipur Palli Bidyut Samity-2</p>
+                      {settings?.signatory1Name && <p className="font-bold text-black">{settings.signatory1Name}</p>}
+                      <p className="font-bold text-black">{settings?.signatory1Designation || 'AGM Finance'}</p>
+                      <p className="text-[14px] text-black">{headerSettings.headerLine2}</p>
                     </div>
                 </div>
                 <div className="flex flex-col items-center">
                     <div className="border-t border-black w-full pt-1">
-                      <p className="font-bold text-black">Senior General Manager</p>
-                      <p className="text-[14px] text-black">Gazipur Palli Bidyut Samity-2</p>
+                      {settings?.signatory2Name && <p className="font-bold text-black">{settings.signatory2Name}</p>}
+                      <p className="font-bold text-black">{settings?.signatory2Designation || 'Senior General Manager'}</p>
+                      <p className="text-[14px] text-black">{headerSettings.headerLine2}</p>
                     </div>
                 </div>
             </footer>

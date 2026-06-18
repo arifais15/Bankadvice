@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Settings as SettingsIcon, Pencil, Image as ImageIcon, Loader2, Info } from 'lucide-react';
+import { Settings as SettingsIcon, Pencil, Image as ImageIcon, Loader2, Info, Users } from 'lucide-react';
 import { printSettings as defaultSettings } from '@/lib/settings';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormDescription } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
@@ -44,7 +44,6 @@ export default function SettingsPage() {
     
     const settingsRef = doc(firestore, 'settings', 'print');
     
-    // Non-blocking write
     setDoc(settingsRef, data, { merge: true })
       .catch(async (error) => {
         const permissionError = new FirestorePermissionError({
@@ -75,7 +74,7 @@ export default function SettingsPage() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-8 pb-12">
         <PageHeader
           title="Settings"
           description="Configure application and print settings (Cloud Synced)."
@@ -90,7 +89,7 @@ export default function SettingsPage() {
           <Info className="h-4 w-4" />
           <AlertTitle>Cloud Persistence</AlertTitle>
           <AlertDescription>
-            Settings are saved to Firestore. Changes reflect instantly using local caching.
+            Settings are saved to Firestore. Changes reflect instantly across the application.
           </AlertDescription>
         </Alert>
 
@@ -101,7 +100,7 @@ export default function SettingsPage() {
               Company Identity
             </CardTitle>
             <CardDescription>
-              Your company logo and seal for use in printed documents and the app header.
+              Your company logo and seal for use in printed documents.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid md:grid-cols-2 gap-8">
@@ -114,7 +113,7 @@ export default function SettingsPage() {
                   <FormControl>
                     <Input placeholder="https://example.com/logo.png" {...field} />
                   </FormControl>
-                  <FormDescription>Used in the sidebar and print headers.</FormDescription>
+                  <FormDescription>Used in print headers and sidebar.</FormDescription>
                   {watchedValues.companyLogoUrl && (
                     <div className="mt-4 relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
                       <Image src={watchedValues.companyLogoUrl} alt="Logo Preview" fill style={{ objectFit: 'contain' }} unoptimized />
@@ -149,7 +148,6 @@ export default function SettingsPage() {
                       <FormControl>
                         <Input placeholder="https://example.com/seal.png" {...field} />
                       </FormControl>
-                      <FormDescription>Only visible when enabled above.</FormDescription>
                       {watchedValues.companySealUrl && (
                         <div className="mt-4 relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
                           <Image src={watchedValues.companySealUrl} alt="Seal Preview" fill style={{ objectFit: 'contain' }} unoptimized />
@@ -170,14 +168,74 @@ export default function SettingsPage() {
               Print Header Settings
             </CardTitle>
             <CardDescription>
-              The text that appears on the printed advice header.
+              The text that appears on the top of the printed advice.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid md:grid-cols-2 gap-4">
-             <FormField control={form.control} name="headerLine1" render={({ field }) => (<FormItem><FormLabel>Header Line 1</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
-             <FormField control={form.control} name="headerLine2" render={({ field }) => (<FormItem><FormLabel>Header Line 2</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
-             <FormField control={form.control} name="headerLine3" render={({ field }) => (<FormItem><FormLabel>Header Line 3</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
-             <FormField control={form.control} name="headerLine4" render={({ field }) => (<FormItem><FormLabel>Header Line 4</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
+             <FormField control={form.control} name="headerLine1" render={({ field }) => (<FormItem><FormLabel>Header Line 1 (Bengali)</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
+             <FormField control={form.control} name="headerLine2" render={({ field }) => (<FormItem><FormLabel>Header Line 2 (English)</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
+             <FormField control={form.control} name="headerLine3" render={({ field }) => (<FormItem><FormLabel>Header Line 3 (Address)</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
+             <FormField control={form.control} name="headerLine4" render={({ field }) => (<FormItem><FormLabel>Header Line 4 (Contact)</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Document Signatories
+            </CardTitle>
+            <CardDescription>
+              Configure names and designations for the authorized signers.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <h3 className="font-semibold text-sm border-b pb-2">Signatory 1 (Left)</h3>
+              <FormField
+                control={form.control}
+                name="signatory1Name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl><Input placeholder="e.g. Md. Ashraful Alam" {...field} /></FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="signatory1Designation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Designation</FormLabel>
+                    <FormControl><Input placeholder="e.g. AGM Finance" {...field} /></FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="space-y-4">
+              <h3 className="font-semibold text-sm border-b pb-2">Signatory 2 (Right)</h3>
+              <FormField
+                control={form.control}
+                name="signatory2Name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl><Input placeholder="e.g. Md. Sohel Rana" {...field} /></FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="signatory2Designation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Designation</FormLabel>
+                    <FormControl><Input placeholder="e.g. Senior General Manager" {...field} /></FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -185,10 +243,10 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <SettingsIcon className="h-5 w-5 text-primary" />
-              Print Layout Settings
+              Layout & Extras
             </CardTitle>
             <CardDescription>
-              Customize the appearance of printed documents.
+              Additional layout controls for the document.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -199,7 +257,7 @@ export default function SettingsPage() {
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
                         <FormLabel className="text-base">Enable Watermark</FormLabel>
-                        <FormDescription>Display a watermark logo in the background of printed advices.</FormDescription>
+                        <FormDescription>Display a subtle background logo.</FormDescription>
                       </div>
                       <FormControl>
                         <Switch checked={!!field.value} onCheckedChange={field.onChange} />
@@ -217,7 +275,7 @@ export default function SettingsPage() {
                       <FormControl>
                         <Input placeholder="https://example.com/watermark.png" {...field} />
                       </FormControl>
-                      <FormDescription>If empty, the company logo will be used as the watermark.</FormDescription>
+                      <FormDescription>Defaults to company logo if empty.</FormDescription>
                        {watchedValues.watermarkUrl && (
                         <div className="mt-4 relative w-40 h-40 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
                             <Image src={watchedValues.watermarkUrl} alt="Watermark Preview" fill style={{ objectFit: 'contain' }} unoptimized />
