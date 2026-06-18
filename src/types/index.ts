@@ -28,6 +28,7 @@ export type BankAdvice = {
   employees: AdviceEmployeeItem[];
   status: 'Draft' | 'Issued' | 'Archived';
   totalAmount: number;
+  type: 'Employee' | 'External';
 };
 
 export type PrintSettings = {

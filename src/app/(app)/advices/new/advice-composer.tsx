@@ -17,6 +17,8 @@ import {
   Landmark,
   Edit,
   CalendarIcon,
+  User,
+  Globe,
 } from 'lucide-react';
 import { cn, formatCurrency, generateAdviceNumber } from '@/lib/utils';
 import { generateAdviceNarrative } from '@/ai/flows/generate-advice-narrative-flow';
@@ -62,8 +64,10 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const adviceFormSchema = z.object({
+  type: z.enum(['Employee', 'External']),
   refNo: z.string().min(1, 'Reference No. is required.'),
   date: z.date({ required_error: 'Advice date is required.' }),
   subject: z.string().min(1, 'Subject is required.'),
@@ -78,7 +82,7 @@ const adviceFormSchema = z.object({
       employee: z.custom<Employee>(),
       netPayment: z.number().min(0.01, 'Payment must be greater than 0.'),
     })
-  ).min(1, 'At least one employee is required.'),
+  ).min(1, 'At least one payee is required.'),
 });
 
 type AdviceFormValues = z.infer<typeof adviceFormSchema>;
@@ -142,6 +146,7 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
         purpose: adviceToEdit.purpose || '',
         context: adviceToEdit.context || '',
     } : {
+      type: 'Employee',
       refNo: defaultRefNo,
       date: new Date(),
       subject: '',
@@ -160,6 +165,7 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
     name: 'employees',
   });
 
+  const watchType = form.watch('type');
   const watchEmployees = form.watch('employees');
   const totalAmount = watchEmployees.reduce(
     (acc, curr) => acc + (Number(curr.netPayment) || 0),
@@ -225,7 +231,6 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
     if (isEditMode && adviceToEdit) {
       adviceId = adviceToEdit.id;
     } else {
-      // Calculate next integer sequence
       const sequenceNumbers = allAdvices
         .map(a => {
           const match = a.adviceNumber.match(/AO-(\d+)/);
@@ -269,19 +274,19 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">{isEditMode ? 'Edit Bank Advice' : 'New Bank Advice'}</h2>
+            <h2 className="text-xl font-semibold">{isEditMode ? 'Edit Advice' : 'New Advice'}</h2>
              <Dialog>
                 <DialogTrigger asChild>
                 <Button variant="outline">
                     <Landmark className="mr-2 h-4 w-4" />
-                    Configure Bank Details
+                    Bank Settings
                 </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[625px]">
                 <DialogHeader>
                     <DialogTitle>Advice Configuration</DialogTitle>
                     <DialogDescription>
-                    Set the core details for this advice document.
+                    Set core banking and reference details.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-6 py-4">
@@ -359,10 +364,45 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <FileText className="h-5 w-5 text-primary" />
-                  <span>Advice Details</span>
+                  <span>General Information</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Advice Type</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex gap-4"
+                        >
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="Employee" />
+                            </FormControl>
+                            <FormLabel className="font-normal flex items-center gap-1.5 cursor-pointer">
+                              <User className="h-4 w-4" /> Employee Advice
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="External" />
+                            </FormControl>
+                            <FormLabel className="font-normal flex items-center gap-1.5 cursor-pointer">
+                              <Globe className="h-4 w-4" /> External Payee Advice
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                     control={form.control}
@@ -371,7 +411,7 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                         <FormItem>
                         <FormLabel>Subject</FormLabel>
                         <FormControl>
-                            <Input placeholder="Monthly Salary" {...field} list="subject-suggestions" />
+                            <Input placeholder="e.g. Monthly Salary" {...field} list="subject-suggestions" />
                         </FormControl>
                         <datalist id="subject-suggestions">
                             {subjects.map((s) => <option key={s} value={s} />)}
@@ -416,10 +456,10 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
               <CardContent className="space-y-4">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField control={form.control} name="purpose" render={({ field }) => (
-                      <FormItem><FormLabel>Purpose</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel>Purpose</FormLabel><FormControl><Input placeholder="e.g. Payroll" {...field} /></FormControl></FormItem>
                     )} />
                     <FormField control={form.control} name="context" render={({ field }) => (
-                      <FormItem><FormLabel>Context</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel>Context</FormLabel><FormControl><Input placeholder="e.g. October 2024" {...field} /></FormControl></FormItem>
                     )} />
                 </div>
                  <Button type="button" variant="outline" size="sm" onClick={handleGenerateNarrative} disabled={isGenerating}>
@@ -443,24 +483,27 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                    <Label>Employee</Label>
+                    <Label>{watchType === 'Employee' ? 'Employee' : 'Payee'}</Label>
                     <Popover open={open} onOpenChange={setOpen}>
                       <PopoverTrigger asChild>
                         <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-                          {selectedEmployee ? selectedEmployee.name : 'Select...'}
+                          {selectedEmployee ? selectedEmployee.name : 'Search in registry...'}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command>
-                          <CommandInput placeholder="Search..." />
+                          <CommandInput placeholder="Search name or ID..." />
                           <CommandList>
-                            <CommandEmpty>No employee found.</CommandEmpty>
+                            <CommandEmpty>No results found.</CommandEmpty>
                             <CommandGroup>
                               {allEmployees?.map((p) => (
                                 <CommandItem key={p.id} value={p.name} onSelect={() => { setSelectedEmployee(p); setOpen(false); }}>
                                   <Check className={cn('mr-2 h-4 w-4', selectedEmployee?.id === p.id ? 'opacity-100' : 'opacity-0')} />
-                                  {p.name}
+                                  <div className="flex flex-col">
+                                    <span>{p.name}</span>
+                                    <span className="text-xs text-muted-foreground">{p.designation} - {p.id}</span>
+                                  </div>
                                 </CommandItem>
                               ))}
                             </CommandGroup>
@@ -470,22 +513,22 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                     </Popover>
                 </div>
                 <div className="space-y-2">
-                  <Label>Amount</Label>
-                  <Input type="number" value={netPayment} onChange={(e) => setNetPayment(e.target.value)} />
+                  <Label>Payment Amount</Label>
+                  <Input type="number" value={netPayment} onChange={(e) => setNetPayment(e.target.value)} placeholder="0.00" />
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col gap-2">
                   <Button type="button" className="w-full" onClick={handleAddOrUpdateEmployee} disabled={!selectedEmployee || !netPayment}>
-                    {editingIndex !== null ? 'Update' : 'Add to Advice'}
+                    {editingIndex !== null ? 'Update Item' : 'Add to List'}
                   </Button>
-                  {editingIndex !== null && <Button type="button" variant="ghost" className="w-full" onClick={() => { setEditingIndex(null); setSelectedEmployee(null); setNetPayment(''); }}>Cancel</Button>}
+                  {editingIndex !== null && <Button type="button" variant="ghost" className="w-full" onClick={() => { setEditingIndex(null); setSelectedEmployee(null); setNetPayment(''); }}>Cancel Edit</Button>}
               </CardFooter>
             </Card>
           </div>
         </div>
 
         <Card>
-            <CardHeader><CardTitle>Employee Breakdown</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{watchType === 'Employee' ? 'Employee Breakdown' : 'Payee Breakdown'}</CardTitle></CardHeader>
             <CardContent>
                 <div className="border rounded-md">
                     <Table>
@@ -498,7 +541,7 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {fields.length === 0 ? <TableRow><TableCell colSpan={4} className="h-24 text-center">Empty.</TableCell></TableRow> : fields.map((field, index) => (
+                            {fields.length === 0 ? <TableRow><TableCell colSpan={4} className="h-24 text-center">No items added yet.</TableCell></TableRow> : fields.map((field, index) => (
                                 <TableRow key={field.id}>
                                     <TableCell className="font-mono">{field.employee.id}</TableCell>
                                     <TableCell>{field.employee.name}</TableCell>
@@ -514,7 +557,7 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
                 </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-4 bg-muted/50 py-4 px-6">
-                <span className="text-sm text-muted-foreground">Total</span>
+                <span className="text-sm text-muted-foreground">Grand Total</span>
                 <span className="font-bold text-xl">{formatCurrency(totalAmount)}</span>
             </CardFooter>
         </Card>

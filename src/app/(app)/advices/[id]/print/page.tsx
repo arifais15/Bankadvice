@@ -100,7 +100,6 @@ export default function PrintAdvicePage() {
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet([header, ...dataForExcel, [], totalRow]);
-    // Increased the last column (Amount) width to 22 in Excel as well
     const cols = [{ wch: 5 }, { wch: 10 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 22 }];
     worksheet['!cols'] = cols;
 
@@ -154,6 +153,13 @@ export default function PrintAdvicePage() {
     display: 'table-cell',
     wordBreak: 'break-all'
   };
+
+  // Adaptive wording based on advice type
+  const isEmployeeType = advice.type === 'Employee';
+  const accountDescription = isEmployeeType 
+    ? "employees' personal savings accounts" 
+    : "payees' bank accounts";
+  const nameHeader = isEmployeeType ? "Employee Name" : "Payee Name";
 
   return (
     <div className="bg-muted/30 print:bg-white min-h-screen">
@@ -242,7 +248,7 @@ export default function PrintAdvicePage() {
 
               <p className="mt-3 leading-tight text-justify text-[15px] text-black">
                 You are requested to debit our Account No. <span className="font-bold">{advice.debitAccount}</span> by an amount of <span className="font-bold">{formatCurrency(advice.totalAmount)}</span>
-                ( <span className="font-bold">{amountToWords(advice.totalAmount)}</span> ). The amount is to be transferred via BEFTN to employees' personal savings accounts as per the list provided below.
+                ( <span className="font-bold">{amountToWords(advice.totalAmount)}</span> ). The amount is to be transferred via BEFTN to {accountDescription} as per the list provided below.
               </p>
               
               <div className="mt-4">
@@ -251,7 +257,7 @@ export default function PrintAdvicePage() {
                     <tr className="border-b border-black">
                       <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '3%' }}>SL</th>
                       <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '7%' }}>ID</th>
-                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '22%' }}>Employee Name</th>
+                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '22%' }}>{nameHeader}</th>
                       <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '15%' }}>Designation</th>
                       <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '10%' }}>Bank Name</th>
                       <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '10%' }}>Branch Name</th>

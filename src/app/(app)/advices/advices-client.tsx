@@ -20,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Printer, Eye, Edit, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Printer, Eye, Edit, Loader2, User, Globe } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { BankAdvice } from '@/types';
 import { useFirestore, useCollection } from '@/firebase';
@@ -60,6 +60,7 @@ export function AdvicesClient() {
           <TableHeader>
             <TableRow>
               <TableHead>Advice No.</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead>Subject</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Amount</TableHead>
@@ -73,6 +74,16 @@ export function AdvicesClient() {
                 <TableRow key={advice.id}>
                   <TableCell className="font-medium">
                     {advice.adviceNumber}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      {advice.type === 'External' ? (
+                        <Globe className="h-3 w-3" />
+                      ) : (
+                        <User className="h-3 w-3" />
+                      )}
+                      {advice.type || 'Employee'}
+                    </div>
                   </TableCell>
                   <TableCell>{advice.subject}</TableCell>
                   <TableCell>
@@ -128,7 +139,7 @@ export function AdvicesClient() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   No advices found in Firestore.
                 </TableCell>
               </TableRow>
