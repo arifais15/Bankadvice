@@ -1,0 +1,65 @@
+
+{
+  "entities": {
+    "Employee": {
+      "title": "Employee",
+      "description": "A registered employee or payee in the system.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "designation": { "type": "string" },
+        "bankName": { "type": "string" },
+        "branch": { "type": "string" },
+        "accountNumber": { "type": "string" },
+        "routing": { "type": "string" }
+      },
+      "required": ["id", "name", "accountNumber"]
+    },
+    "BankAdvice": {
+      "title": "Bank Advice",
+      "description": "A document sent to the bank to initiate payments.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "adviceNumber": { "type": "string" },
+        "refNo": { "type": "string" },
+        "subject": { "type": "string" },
+        "debitAccount": { "type": "string" },
+        "bankName": { "type": "string" },
+        "bankBranch": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "narrative": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["Draft", "Issued", "Archived"] },
+        "type": { "type": "string", "enum": ["Employee", "External"] }
+      }
+    },
+    "PrintSettings": {
+      "title": "Print Settings",
+      "description": "Global settings for document appearance.",
+      "type": "object",
+      "properties": {
+        "companyLogoUrl": { "type": "string" },
+        "headerLine1": { "type": "string" }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/employees/{employeeId}": {
+      "schema": "Employee",
+      "description": "Individual employee records."
+    },
+    "/advices/{adviceId}": {
+      "schema": "BankAdvice",
+      "description": "Stored bank advice documents."
+    },
+    "/settings/print": {
+      "schema": "PrintSettings",
+      "description": "Global print configuration."
+    }
+  }
+}
