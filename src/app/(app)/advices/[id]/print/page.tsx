@@ -146,6 +146,14 @@ export default function PrintAdvicePage() {
     whiteSpace: 'nowrap',
   };
 
+  const routingCellStyle: React.CSSProperties = {
+    ...cellStyle,
+    whiteSpace: 'normal',
+    lineHeight: '1.2',
+    display: 'table-cell',
+    wordBreak: 'break-all'
+  };
+
   return (
     <div className="bg-muted/30 print:bg-white min-h-screen">
         <div className="p-4 max-w-7xl mx-auto flex justify-end gap-2 no-print">
@@ -242,12 +250,12 @@ export default function PrintAdvicePage() {
                     <tr className="border-b border-black">
                       <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '3%' }}>SL</th>
                       <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '7%' }}>ID</th>
-                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '28%' }}>Employee Name</th>
-                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '17%' }}>Designation</th>
+                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '26%' }}>Employee Name</th>
+                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '16%' }}>Designation</th>
                       <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '10%' }}>Bank Name</th>
                       <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '10%' }}>Branch Name</th>
                       <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '13%' }}>A/C Number</th>
-                      <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '6%' }}>Routing</th>
+                      <th className="border-r border-black font-bold text-center" style={{ ...routingCellStyle, width: '9%', verticalAlign: 'middle', height: '22pt' }}>Routing</th>
                       <th className="text-right font-bold pr-1" style={{ ...cellStyle, width: '6%' }}>Amount</th>
                     </tr>
                   </thead>
@@ -261,7 +269,7 @@ export default function PrintAdvicePage() {
                         <td className="border-r border-black text-left" style={cellStyle}>{item.employee.bankName}</td>
                         <td className="border-r border-black text-left" style={cellStyle}>{item.employee.branch}</td>
                         <td className="border-r border-black font-mono text-left" style={cellStyle}>{item.employee.accountNumber}</td>
-                        <td className="border-r border-black font-mono text-center" style={cellStyle}>{item.employee.routing}</td>
+                        <td className="border-r border-black font-mono text-center" style={routingCellStyle}>{item.employee.routing}</td>
                         <td className="text-right font-mono font-bold" style={cellStyle}>{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(item.netPayment)}</td>
                       </tr>
                     ))}
