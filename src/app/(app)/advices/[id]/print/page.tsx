@@ -50,7 +50,7 @@ export default function PrintAdvicePage() {
     try {
       const element = adviceContentRef.current;
       const canvas = await html2canvas(element, {
-        scale: 4, 
+        scale: 3, 
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
@@ -139,8 +139,11 @@ export default function PrintAdvicePage() {
     height: '22pt',
     lineHeight: '22pt',
     verticalAlign: 'middle',
-    padding: 0,
+    padding: '0 4px',
     color: '#000000',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   };
 
   return (
@@ -238,28 +241,28 @@ export default function PrintAdvicePage() {
                   <thead className="bg-gray-50">
                     <tr className="border-b border-black">
                       <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '3%' }}>SL</th>
-                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '7%' }}>ID</th>
-                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '25%' }}>Employee Name</th>
-                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '15%' }}>Designation</th>
-                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '12%' }}>Bank Name</th>
-                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '12%' }}>Branch Name</th>
-                      <th className="border-r border-black font-bold text-left pl-1" style={{ ...cellStyle, width: '14%' }}>A/C Number</th>
-                      <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '5%' }}>Routing</th>
-                      <th className="text-right font-bold pr-1" style={{ ...cellStyle, width: '7%' }}>Amount</th>
+                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '7%' }}>ID</th>
+                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '28%' }}>Employee Name</th>
+                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '17%' }}>Designation</th>
+                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '10%' }}>Bank Name</th>
+                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '10%' }}>Branch Name</th>
+                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '13%' }}>A/C Number</th>
+                      <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '6%' }}>Routing</th>
+                      <th className="text-right font-bold pr-1" style={{ ...cellStyle, width: '6%' }}>Amount</th>
                     </tr>
                   </thead>
                   <tbody className="text-black">
                     {advice.employees.map((item, index) => (
                       <tr key={item.employee.id} className="border-b border-black">
                         <td className="border-r border-black text-center" style={cellStyle}>{index + 1}</td>
-                        <td className="border-r border-black font-mono text-left pl-1" style={cellStyle}>{item.employee.id}</td>
-                        <td className="border-r border-black font-medium text-left pl-1" style={cellStyle}>{item.employee.name}</td>
-                        <td className="border-r border-black text-left pl-1" style={cellStyle}>{item.employee.designation}</td>
-                        <td className="border-r border-black text-left pl-1" style={cellStyle}>{item.employee.bankName}</td>
-                        <td className="border-r border-black text-left pl-1" style={cellStyle}>{item.employee.branch}</td>
-                        <td className="border-r border-black font-mono text-left pl-1" style={cellStyle}>{item.employee.accountNumber}</td>
+                        <td className="border-r border-black font-mono text-left" style={cellStyle}>{item.employee.id}</td>
+                        <td className="border-r border-black font-medium text-left" style={cellStyle}>{item.employee.name}</td>
+                        <td className="border-r border-black text-left" style={cellStyle}>{item.employee.designation}</td>
+                        <td className="border-r border-black text-left" style={cellStyle}>{item.employee.bankName}</td>
+                        <td className="border-r border-black text-left" style={cellStyle}>{item.employee.branch}</td>
+                        <td className="border-r border-black font-mono text-left" style={cellStyle}>{item.employee.accountNumber}</td>
                         <td className="border-r border-black font-mono text-center" style={cellStyle}>{item.employee.routing}</td>
-                        <td className="text-right font-mono font-bold pr-1" style={cellStyle}>{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(item.netPayment)}</td>
+                        <td className="text-right font-mono font-bold" style={cellStyle}>{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(item.netPayment)}</td>
                       </tr>
                     ))}
                   </tbody>
