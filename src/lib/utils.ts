@@ -12,9 +12,12 @@ export function formatCurrency(amount: number) {
   }).format(amount);
 }
 
-export function generateAdviceNumber(): string {
-  const randomSuffix = Math.floor(Math.random() * 90000000) + 10000000;
-  return `AO-${randomSuffix}`;
+/**
+ * Generates a formatted advice number.
+ * @param sequence The integer sequence number for the advice.
+ */
+export function generateAdviceNumber(sequence: number): string {
+  return `AO-${sequence}`;
 }
 
 export function amountToWords(amount: number): string {

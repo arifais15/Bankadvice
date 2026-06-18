@@ -105,7 +105,13 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
     return query(collection(firestore, 'employees'), orderBy('name', 'asc'));
   }, [firestore]);
 
+  const advicesQuery = React.useMemo(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'advices'));
+  }, [firestore]);
+
   const { data: allEmployees } = useCollection<Employee>(employeesQuery as any);
+  const { data: allAdvices } = useCollection<BankAdvice>(advicesQuery as any);
   
   const [open, setOpen] = React.useState(false);
   const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | null>(null);
@@ -211,10 +217,26 @@ export function AdviceComposer({ adviceToEdit = null }: AdviceComposerProps) {
   };
 
   const onSubmit = async (data: AdviceFormValues) => {
-    if (!firestore) return;
+    if (!firestore || !allAdvices) return;
     setIsSubmitting(true);
     
-    const adviceId = isEditMode && adviceToEdit ? adviceToEdit.id : generateAdviceNumber();
+    let adviceId = '';
+    
+    if (isEditMode && adviceToEdit) {
+      adviceId = adviceToEdit.id;
+    } else {
+      // Calculate next integer sequence
+      const sequenceNumbers = allAdvices
+        .map(a => {
+          const match = a.adviceNumber.match(/AO-(\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+        .filter(n => !isNaN(n));
+      
+      const nextSequence = sequenceNumbers.length > 0 ? Math.max(...sequenceNumbers) + 1 : 1;
+      adviceId = generateAdviceNumber(nextSequence);
+    }
+
     const adviceRef = doc(firestore, 'advices', adviceId);
     
     const payload: BankAdvice = {
