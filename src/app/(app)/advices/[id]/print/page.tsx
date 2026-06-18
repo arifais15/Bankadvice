@@ -100,7 +100,8 @@ export default function PrintAdvicePage() {
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet([header, ...dataForExcel, [], totalRow]);
-    const cols = [{ wch: 5 }, { wch: 10 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }];
+    // Increased the last column (Amount) width to 22 in Excel as well
+    const cols = [{ wch: 5 }, { wch: 10 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 22 }];
     worksheet['!cols'] = cols;
 
     const workbook = XLSX.utils.book_new();
@@ -250,13 +251,13 @@ export default function PrintAdvicePage() {
                     <tr className="border-b border-black">
                       <th className="border-r border-black font-bold text-center" style={{ ...cellStyle, width: '3%' }}>SL</th>
                       <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '7%' }}>ID</th>
-                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '26%' }}>Employee Name</th>
-                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '16%' }}>Designation</th>
+                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '22%' }}>Employee Name</th>
+                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '15%' }}>Designation</th>
                       <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '10%' }}>Bank Name</th>
                       <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '10%' }}>Branch Name</th>
-                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '13%' }}>A/C Number</th>
+                      <th className="border-r border-black font-bold text-left" style={{ ...cellStyle, width: '12%' }}>A/C Number</th>
                       <th className="border-r border-black font-bold text-center" style={{ ...routingCellStyle, width: '9%', verticalAlign: 'middle', height: '22pt' }}>Routing</th>
-                      <th className="text-right font-bold pr-1" style={{ ...cellStyle, width: '6%' }}>Amount</th>
+                      <th className="text-right font-bold pr-1" style={{ ...cellStyle, width: '12%' }}>Amount</th>
                     </tr>
                   </thead>
                   <tbody className="text-black">
