@@ -133,7 +133,7 @@ export default function PrintAdvicePage() {
     headerLine4: settings?.headerLine4 || 'টেলিফোন: ০২-৯২০১৭৮৩, E-mail: gazipbs2@gmail.com',
   };
 
-  const contactLines = headerSettings.headerLine4.split(',').map(l => l.trim()).filter(Boolean);
+  const contactLines = (headerSettings.headerLine4 || '').split(',').map(l => l.trim()).filter(Boolean);
 
   const cellStyle: React.CSSProperties = {
     height: '22pt',
@@ -187,7 +187,7 @@ export default function PrintAdvicePage() {
         <div 
           ref={adviceContentRef}
           className={cn(
-            "relative p-12 max-w-[297mm] mx-auto font-serif bg-white text-black shadow-lg mb-8",
+            "relative p-12 max-w-[297mm] mx-auto font-nikosh bg-white text-black shadow-lg mb-8",
             "print:p-0 print:m-0 print:shadow-none print:max-w-none print:mb-0"
           )}
           style={{ color: '#000000' }}
@@ -229,7 +229,7 @@ export default function PrintAdvicePage() {
                 <span className="font-bold">Ref.No:</span> <span className="text-black">{advice.refNo}</span>
               </div>
               <div className="flex items-center">
-                <p><span className="font-bold">Date:</span> <span className="text-black">{mounted ? format(new Date(advice.date), 'dd-MMM-yyyy') : '---'}</span></p>
+                <p><span className="font-bold">Date:</span> <span className="text-black">{mounted && advice.date ? format(new Date(advice.date), 'dd-MMM-yyyy') : '---'}</span></p>
               </div>
             </div>
 
