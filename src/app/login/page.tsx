@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -27,7 +26,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Landmark, Loader2 } from 'lucide-react';
+import { Landmark, Loader2, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -42,6 +42,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [loginError, setLoginError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!isAuthLoading && user) {
@@ -58,7 +59,10 @@ export default function LoginPage() {
   });
 
   async function onSubmit(data: LoginFormValues) {
+    setIsSubmitting(false);
+    setLoginError(null);
     setIsSubmitting(true);
+    
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
       toast({
@@ -67,10 +71,20 @@ export default function LoginPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
+      console.error('Login error:', error);
+      let message = 'Check your credentials and try again.';
+      
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        message = 'Invalid email or password. Please ensure the user exists in the Firebase Console.';
+      } else if (error.code === 'auth/too-many-requests') {
+        message = 'Too many failed attempts. Please try again later.';
+      }
+      
+      setLoginError(message);
       toast({
         variant: 'destructive',
         title: 'Login failed',
-        description: error.message || 'Check your credentials and try again.',
+        description: message,
       });
     } finally {
       setIsSubmitting(false);
@@ -100,6 +114,14 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {loginError && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{loginError}</AlertDescription>
+            </Alert>
+          )}
+          
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -135,9 +157,12 @@ export default function LoginPage() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <div className="text-center text-sm text-muted-foreground">
-            Default credentials: <span className="font-mono">admin@example.com / password</span>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-center text-xs text-muted-foreground border-t pt-4 w-full">
+            <p className="font-semibold mb-1">Getting Started?</p>
+            <p>1. Go to Firebase Console > Authentication</p>
+            <p>2. Enable "Email/Password" provider</p>
+            <p>3. Create a user with email/password</p>
           </div>
         </CardFooter>
       </Card>
