@@ -154,7 +154,6 @@ export default function PrintAdvicePage() {
     wordBreak: 'break-all'
   };
 
-  // Adaptive wording based on advice type
   const isEmployeeType = advice.type === 'Employee';
   const accountDescription = isEmployeeType 
     ? "employees' personal savings accounts" 
