@@ -160,7 +160,7 @@ export default function LoginPage() {
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-center text-xs text-muted-foreground border-t pt-4 w-full">
             <p className="font-semibold mb-1">Getting Started?</p>
-            <p>1. Go to Firebase Console > Authentication</p>
+            <p>1. Go to Firebase Console &gt; Authentication</p>
             <p>2. Enable "Email/Password" provider</p>
             <p>3. Create a user with email/password</p>
           </div>
