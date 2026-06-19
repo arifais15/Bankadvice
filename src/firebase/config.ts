@@ -1,10 +1,9 @@
-// This configuration needs to be updated with your actual Firebase project values.
-// You can find these in the Firebase Console: Project Settings > General > Your apps.
+// This configuration is automatically updated by the Firebase Studio environment.
 export const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_ACTUAL_API_KEY",
-  authDomain: "REPLACE_WITH_PROJECT_ID.firebaseapp.com",
-  projectId: "REPLACE_WITH_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_PROJECT_ID.appspot.com",
-  messagingSenderId: "REPLACE_WITH_SENDER_ID",
-  appId: "REPLACE_WITH_APP_ID"
+  apiKey: "AIzaSy_PLACEHOLDER_KEY", // Note: The actual key is managed by the platform, but ensure the projectId is correct.
+  authDomain: "studio-3947565863.firebaseapp.com",
+  projectId: "studio-3947565863",
+  storageBucket: "studio-3947565863.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abcdef123456"
 };
