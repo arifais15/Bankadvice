@@ -78,6 +78,8 @@ export default function LoginPage() {
         message = 'Invalid email or password. Please ensure the user exists in the Firebase Console.';
       } else if (error.code === 'auth/too-many-requests') {
         message = 'Too many failed attempts. Please try again later.';
+      } else if (error.code === 'auth/api-key-not-valid') {
+        message = 'The Firebase API key is invalid. Please check your configuration.';
       }
       
       setLoginError(message);
@@ -160,7 +162,7 @@ export default function LoginPage() {
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-center text-xs text-muted-foreground border-t pt-4 w-full">
             <p className="font-semibold mb-1">Getting Started?</p>
-            <p>1. Go to Firebase Console &gt; Authentication</p>
+            <p>1. Go to Firebase Console {'>'} Authentication</p>
             <p>2. Enable "Email/Password" provider</p>
             <p>3. Create a user with email/password</p>
           </div>
