@@ -27,7 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Landmark, Loader2, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/alert';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -79,7 +79,7 @@ export default function LoginPage() {
       } else if (error.code === 'auth/too-many-requests') {
         message = 'Too many failed attempts. Please try again later.';
       } else if (error.code === 'auth/api-key-not-valid') {
-        message = 'The Firebase API key is invalid. Please check your configuration.';
+        message = 'The Firebase API key is invalid. Please check your configuration in src/firebase/config.ts.';
       }
       
       setLoginError(message);
