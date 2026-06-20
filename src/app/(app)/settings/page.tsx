@@ -116,7 +116,7 @@ export default function SettingsPage() {
                   <FormDescription>Used in print headers and sidebar.</FormDescription>
                   {watchedValues.companyLogoUrl && (
                     <div className="mt-4 relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
-                      <Image src={watchedValues.companyLogoUrl} alt="Logo Preview" fill style={{ objectFit: 'contain' }} unoptimized />
+                      <Image src={watchedValues.companyLogoUrl} alt="Logo Preview" fill style={{ objectFit: 'contain' }} unoptimized crossOrigin="anonymous" />
                     </div>
                   )}
                 </FormItem>
@@ -150,7 +150,7 @@ export default function SettingsPage() {
                       </FormControl>
                       {watchedValues.companySealUrl && (
                         <div className="mt-4 relative w-24 h-24 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
-                          <Image src={watchedValues.companySealUrl} alt="Seal Preview" fill style={{ objectFit: 'contain' }} unoptimized />
+                          <Image src={watchedValues.companySealUrl} alt="Seal Preview" fill style={{ objectFit: 'contain' }} unoptimized crossOrigin="anonymous" />
                         </div>
                       )}
                     </FormItem>
@@ -278,7 +278,7 @@ export default function SettingsPage() {
                       <FormDescription>Defaults to company logo if empty.</FormDescription>
                        {watchedValues.watermarkUrl && (
                         <div className="mt-4 relative w-40 h-40 border rounded-lg p-2 flex items-center justify-center bg-muted/50">
-                            <Image src={watchedValues.watermarkUrl} alt="Watermark Preview" fill style={{ objectFit: 'contain' }} unoptimized />
+                            <Image src={watchedValues.watermarkUrl} alt="Watermark Preview" fill style={{ objectFit: 'contain' }} unoptimized crossOrigin="anonymous" />
                         </div>
                         )}
                     </FormItem>

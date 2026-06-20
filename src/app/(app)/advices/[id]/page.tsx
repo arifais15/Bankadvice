@@ -95,10 +95,17 @@ export default function AdviceDetailsPage() {
             <Badge
               variant={
                 advice.status === 'Issued'
-                  ? 'success'
+                  ? 'default'
                   : advice.status === 'Draft'
                   ? 'secondary'
                   : 'outline'
+              }
+              className={
+                advice.status === 'Issued'
+                  ? "bg-green-100 text-green-800 hover:bg-green-100"
+                  : advice.status === 'Draft'
+                  ? "bg-blue-100 text-blue-800 hover:bg-blue-100"
+                  : ""
               }
             >
               {advice.status}

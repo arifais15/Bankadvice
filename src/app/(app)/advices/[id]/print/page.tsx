@@ -39,6 +39,24 @@ export default function PrintAdvicePage() {
 
   const { data: advice, isLoading: isLoadingAdvice } = useDoc<BankAdvice>(adviceRef as any);
 
+  const aggregatedEmployees = useMemo(() => {
+    if (!advice?.employees) return [];
+    const map = new Map<string, typeof advice.employees[number]>();
+    for (const item of advice.employees) {
+      const empId = item.employee.id;
+      if (map.has(empId)) {
+        const existing = map.get(empId)!;
+        map.set(empId, {
+          ...existing,
+          netPayment: existing.netPayment + item.netPayment
+        });
+      } else {
+        map.set(empId, { ...item });
+      }
+    }
+    return Array.from(map.values());
+  }, [advice?.employees]);
+
   const handlePrint = () => {
     window.print();
   };
@@ -63,12 +81,37 @@ export default function PrintAdvicePage() {
         unit: 'mm',
         format: 'a4'
       });
+      pdf.setProperties({
+        title: `${advice.adviceNumber}.pdf`
+      });
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-      pdf.save(`${advice.adviceNumber}.pdf`);
+      
+      // Download the PDF using Base64 Data URI (bypasses browser downloader extensions stripping filenames)
+      try {
+        const dataUri = pdf.output('datauristring');
+        const link = document.createElement('a');
+        link.href = dataUri;
+        link.download = `${advice.adviceNumber}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (downloadError) {
+        console.error('Data URL download failed, falling back to pdf.save:', downloadError);
+        pdf.save(`${advice.adviceNumber}.pdf`);
+      }
+
+      // Automatically open the PDF in a new tab
+      try {
+        const blob = pdf.output('blob');
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+      } catch (openError) {
+        console.error('Could not open PDF in new tab:', openError);
+      }
     } catch (error) {
       console.error('PDF generation failed:', error);
     } finally {
@@ -83,7 +126,7 @@ export default function PrintAdvicePage() {
       "SL", "ID", "Name", "Designation", "Bank_Name", "Branch_Name", "AccountNumber", "Routing", "Amount"
     ];
 
-    const dataForExcel = advice.employees.map((item, index) => ([
+    const dataForExcel = aggregatedEmployees.map((item, index) => ([
       index + 1,
       item.employee.id,
       item.employee.name,
@@ -96,7 +139,7 @@ export default function PrintAdvicePage() {
     ]));
 
     const totalRow = [
-      'TOTAL', advice.employees.length, 'In Words:', amountToWords(advice.totalAmount), '', '', '', '', advice.totalAmount
+      'TOTAL', aggregatedEmployees.length, 'In Words:', amountToWords(advice.totalAmount), '', '', '', '', advice.totalAmount
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet([header, ...dataForExcel, [], totalRow]);
@@ -105,7 +148,21 @@ export default function PrintAdvicePage() {
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Advice Details');
-    XLSX.writeFile(workbook, `${advice.adviceNumber}.xlsx`);
+    
+    // Generate base64 data URI for download
+    try {
+      const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'base64' });
+      const dataUri = `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${wbout}`;
+      const link = document.createElement('a');
+      link.href = dataUri;
+      link.download = `${advice.adviceNumber}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (excelError) {
+      console.error('Data URL Excel download failed, falling back to XLSX.writeFile:', excelError);
+      XLSX.writeFile(workbook, `${advice.adviceNumber}.xlsx`);
+    }
   };
 
   if (isLoadingAdvice || isLoadingSettings) {
@@ -200,6 +257,7 @@ export default function PrintAdvicePage() {
                   fill
                   className="object-contain"
                   unoptimized
+                  crossOrigin="anonymous"
                 />
               </div>
             </div>
@@ -208,14 +266,14 @@ export default function PrintAdvicePage() {
           <div className="relative z-10">
              <header className="grid grid-cols-3 items-start pb-2 font-sans border-b border-black">
                 <div className="flex flex-col items-start">
-                  {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={90} height={90} unoptimized className="object-contain" />}
+                  {finalLogoUrl && <Image src={finalLogoUrl} alt="Company Logo" width={90} height={90} unoptimized className="object-contain" crossOrigin="anonymous" />}
                 </div>
                 <div className="text-center">
                   <h1 className="text-[26px] font-bold font-nikosh leading-tight text-black">{headerSettings.headerLine1}</h1>
                   <h2 className="text-[22px] font-bold leading-tight text-black">{headerSettings.headerLine2}</h2>
                 </div>
                 <div className="text-right flex flex-col items-end gap-0.5">
-                  {sealEnabled && finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={70} height={70} unoptimized className="opacity-80 object-contain mb-1" />}
+                  {sealEnabled && finalSealUrl && <Image src={finalSealUrl} alt="Company Seal" width={70} height={70} unoptimized className="opacity-80 object-contain mb-1" crossOrigin="anonymous" />}
                   <p className="text-[13px] font-nikosh leading-tight font-bold text-black">{headerSettings.headerLine3}</p>
                   {contactLines.map((line, i) => (
                     <p key={i} className="text-[12px] font-nikosh leading-tight text-black">{line}</p>
@@ -266,7 +324,7 @@ export default function PrintAdvicePage() {
                     </tr>
                   </thead>
                   <tbody className="text-black">
-                    {advice.employees.map((item, index) => (
+                    {aggregatedEmployees.map((item, index) => (
                       <tr key={item.employee.id} className="border-b border-black">
                         <td className="border-r border-black text-center" style={cellStyle}>{index + 1}</td>
                         <td className="border-r border-black font-mono text-left" style={cellStyle}>{item.employee.id}</td>
@@ -284,7 +342,7 @@ export default function PrintAdvicePage() {
                     <tr style={{ height: '24pt', lineHeight: '24pt', verticalAlign: 'middle' }}>
                         <td className="border-r border-black text-center" colSpan={2} style={{ color: '#000000' }}>TOTAL</td>
                         <td className="border-r border-black text-left pl-2" colSpan={6} style={{ color: '#000000' }}>
-                          <span className="mr-2">Count: {advice.employees.length}</span>
+                          <span className="mr-2">Count: {aggregatedEmployees.length}</span>
                           <span className="mx-2 font-normal">|</span>
                           <span className="ml-2">In Words: {amountToWords(advice.totalAmount)}</span>
                         </td>

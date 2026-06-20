@@ -1,7 +1,7 @@
 
 import { initializeApp, getApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getAuth, type Auth } from 'firebase/auth';
-import { getFirestore, type Firestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
+import { getAuth, connectAuthEmulator, type Auth } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator, type Firestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 
 /**
@@ -15,9 +15,21 @@ export function initializeFirebase() {
     }
 
     const apps = getApps();
-    const app = apps.length > 0 ? getApp() : initializeApp(firebaseConfig);
+    const isNew = apps.length === 0;
+    const app = isNew ? initializeApp(firebaseConfig) : getApp();
     const auth = getAuth(app);
     const firestore = getFirestore(app);
+
+    if (isNew && process.env.NODE_ENV === 'development') {
+        console.log("Connecting to Firebase Emulators...");
+        try {
+            connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+            connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
+            console.log("Successfully connected to Firebase Emulators.");
+        } catch (e) {
+            console.error("Error connecting to Firebase Emulators:", e);
+        }
+    }
 
     // Enable offline persistence for PC usage
     enableMultiTabIndexedDbPersistence(firestore).catch((err) => {

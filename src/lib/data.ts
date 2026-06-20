@@ -50,6 +50,7 @@ export const advices: BankAdvice[] = [
     ],
     status: 'Issued',
     totalAmount: 135000,
+    type: 'Employee',
   },
     {
     id: '2',
@@ -69,6 +70,7 @@ export const advices: BankAdvice[] = [
     ],
     status: 'Issued',
     totalAmount: 110000,
+    type: 'Employee',
   },
   {
     id: '3',
@@ -89,6 +91,7 @@ export const advices: BankAdvice[] = [
     ],
     status: 'Draft',
     totalAmount: 80000,
+    type: 'Employee',
   },
 ];
 
